@@ -91,27 +91,69 @@ Can be one of highlight/underline/strikeout/squiggly."
 ;; pdftools://path::page++height_percent;;annot_id@@search_string
 (defun org-pdftools-open-pdftools (link)
   (cond ((string-match
-          "\\(.*\\)::\\([0-9]*\\)\\+\\+\\([[0-9]\\.*[0-9]*\\);;\\(.*\\)"
+          "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\)?\\(.*\\)?"
           link)
-         (let* ((path (match-string 1 link))
-                (page (string-to-number
-                       (match-string 2 link)))
-                (height (string-to-number
-                         (match-string 3 link)))
-                (annot-id (match-string 4 link)))
-           (org-open-file path 1)
-                                        ;TODO Integrate org-noter?
-           (pdf-view-goto-page page)
-           (image-set-window-vscroll
-            (round
-             (/
-              (*
-               height
-               (cdr (pdf-view-image-size)))
-              (frame-char-height))))
-           (pdf-annot-show-annotation
-            (pdf-info-getannot annot-id)
-            t)))
+         (let ((path (match-string 1 link))
+               (page (match-string 2 link))
+               (height (match-string 4 link))
+               (annot-id (match-string 6 link)))
+           (when (and path
+                      (not (string-empty-p path)))
+             (if org-noter--session
+                 (org-noter--with-valid-session
+                  (let ((doc (with-selected-window
+                                 (org-noter--get-doc-window)
+                               (buffer-file-name)))
+                        (fullpath (expand-file-name
+                                   path
+                                   org-pdftools-root-dir)))
+                    (if (string-equal doc fullpath)
+                        (select-window
+                         (org-noter--get-doc-window))
+                      (let (org-link-frame-setup
+                            '(file . find-file-other-frame))
+                        (org-open-file path 1)))))
+               (org-open-file path 1)))
+           (when (and page
+                      (not (string-empty-p page)))
+             (if org-noter--session
+                 (org-noter--with-valid-session
+                  (with-selected-window
+                      (org-noter--get-doc-window)
+                    (pdf-view-goto-page (string-to-number page))))
+               (pdf-view-goto-page (string-to-number page))))
+           (when (and height
+                      (not (string-empty-p height)))
+             (if org-noter--session
+                 (org-noter--with-valid-session
+                  (with-selected-window
+                      (org-noter--get-doc-window)
+                    (image-set-window-vscroll
+                     (round
+                      (/
+                       (*
+                        (string-to-number height)
+                        (cdr (pdf-view-image-size)))
+                       (frame-char-height))))))
+               (image-set-window-vscroll
+                (round
+                 (/
+                  (*
+                   (string-to-number height)
+                   (cdr (pdf-view-image-size)))
+                  (frame-char-height))))))
+           (when (and annot-id
+                      (not (string-empty-p annot-id)))
+             (if org-noter--session
+                 (org-noter--with-valid-session
+                  (with-selected-window
+                      (org-noter--get-doc-window)
+                    (pdf-annot-show-annotation
+                     (pdf-info-getannot annot-id)
+                     t)))
+               (pdf-annot-show-annotation
+                (pdf-info-getannot annot-id)
+                t)))))
         ((string-match
           "\\(.*\\)@@\\(.*\\)"
           link)
@@ -120,34 +162,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                 (pathlist (split-string paths "%&%")))
            (pdf-occur-search
             pathlist
-            search-string)))
-        ((string-match
-          "\\(.*\\)::\\([0-9]*\\)\\+\\+\\([[0-9]\\.*[0-9]*\\)"
-          link)
-         (let* ((path (match-string 1 link))
-                (page (string-to-number
-                       (match-string 2 link)))
-                (height (string-to-number
-                         (match-string 3 link))))
-           (org-open-file path 1)
-           (pdf-view-goto-page page)
-           (image-set-window-vscroll
-            (round
-             (/
-              (*
-               height
-               (cdr (pdf-view-image-size)))
-              (frame-char-height))))))
-        ;; vscroll * frame char height / pdf view imge y size = height
-        ((string-match
-          "\\(.*\\)::\\([0-9]*\\)\\)"
-          link)
-         (let* ((path (match-string 1 link))
-                (page (string-to-number
-                       (match-string 2 link))))
-           (org-open-file path 1)
-           (pdf-view-goto-page page)))
-        (t (org-open-file link 1))))
+            search-string)))))
 
 (defun org-pdftools-open (link)
   (if (and (display-graphic-p)
@@ -166,73 +181,86 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 (add-hook 'org-store-link-functions 'org-pdftools-store-link)
 
+(defun org-pdftools-get-link ()
+  "Get link from the active pdf buffer."
+  (let* ((path (concat
+                org-pdftools-root-dir
+                (file-relative-name
+                 buffer-file-name
+                 org-pdftools-root-dir)))
+         (page (pdf-view-current-page))
+         (annot-id
+          (if (pdf-view-active-region-p)
+              (pdf-annot-get-id
+               (funcall
+                org-pdftools-markup-pointer-function
+                (pdf-view-active-region t)
+                org-pdftools-markup-pointer-color
+                `((opacity . ,org-pdftools-markup-pointer-opacity))))
+            (if (pdf-annot-getannots page)
+                (condition-case-unless-debug
+                    nil
+                    (pdf-annot-get-id
+                     (pdf-annot-read-annotation
+                      "Click the annotation that you want to link to."))
+                  (error (message "error")))
+              (if (y-or-n-p
+                   "Do you want to create a free pointer annotation for the link?")
+                  (pdf-annot-get-id
+                   (funcall-interactively
+                    #'pdf-annot-add-text-annotation
+                    (pdf-util-read-image-position
+                     "Click where a new text annotation should be added ...")
+                    org-pdftools-free-pointer-icon
+                    `((color . ,org-pdftools-free-pointer-color)
+                      (opacity . ,org-pdftools-free-pointer-opacity))))
+                nil))))
+         (height (cond ((boundp 'annot-id)
+                        (nth 1 (pdf-annot-get
+                                (pdf-info-getannot
+                                 annot-id
+                                 path)
+                                'edges)))
+                       (t
+                        (/
+                         (*
+                          (or (image-mode-window-get
+                               'vscroll)
+                              0)
+                          (frame-char-height))
+                         (float
+                          (cdr (pdf-view-image-size)))))))
+         ;; pdftools://path::page++height_percent;;annot_id
+         (link (concat
+                "pdftools:"
+                path
+                "::"
+                (number-to-string page)
+                "++"
+                (format "%.2f" height)
+                (if annot-id
+                    (concat
+                     ";;"
+                     (symbol-name annot-id))
+                  nil))))
+    link))
+
 (defun org-pdftools-store-link ()
   "Store a link to a pdfview/pdfoccur buffer."
   (cond ((eq major-mode 'pdf-view-mode)
          ;; This buffer is in pdf-view-mode
-         (let* ((path (concat
-                       org-pdftools-root-dir
-                       (file-relative-name
-                        buffer-file-name
-                        org-pdftools-root-dir)))
-                (page (pdf-view-current-page))
-                (annot-id
-                 (if pdf-view-active-region
-                     (pdf-annot-get-id
-                      (funcall
-                       org-pdftools-markup-pointer-function
-                       (pdf-view-active-region t)
-                       org-pdftools-markup-pointer-color
-                       `((opacity . ,org-pdftools-markup-pointer-opacity))))
-                   (if (pdf-annot-getannots page)
-                       (condition-case-unless-debug
-                           nil
-                           (pdf-annot-get-id
-                            (pdf-annot-read-annotation
-                             "Click the annotation that you want to link to."))
-                         (error nil)))
-                   (if (y-or-n-p
-                        "Do you want to create a free pointer annotation for the link?")
-                       (pdf-annot-get-id
-                        (funcall-interactively
-                         #'pdf-annot-add-text-annotation
-                         (pdf-util-read-image-position
-                          "Click where a new text annotation should be added ...")
-                         org-pdftools-free-pointer-icon
-                         `((color . ,org-pdftools-free-pointer-color)
-                           (opacity . ,org-pdftools-free-pointer-opacity))))
-                     nil)))
-                (height (cond ((boundp 'annot-id)
-                               (nth 1 (pdf-annot-get
-                                       (pdf-info-getannot
-                                        annot-id
-                                        path)
-                                       'edges)))
-                              (t
-                               (/
-                                (*
-                                 (or (image-mode-window-get
-                                      'vscroll)
-                                     0)
-                                 (frame-char-height))
-                                (float
-                                 (cdr (pdf-view-image-size)))))))
-                ;; pdftools://path::page++height_percent;;annot_id
-                (link (concat
-                       "pdftools:"
-                       path
-                       "::"
-                       (number-to-string page)
-                       "++"
-                       (format "%.2f" height)
-                       (if annot-id
-                           (concat
-                            ";;"
-                            (symbol-name annot-id))
-                         nil))))
+         (let ((desc (if (pdf-view-active-region-p)
+                         (replace-regexp-in-string
+                          "\n"
+                          " "
+                          (mapconcat
+                           'identity
+                           (pdf-view-active-region-text)
+                           ? )))))
            (org-link-store-props
             :type "pdftools"
-            :link link)))
+            :link (org-pdftools-get-link)
+            :description desc)))
         ((eq major-mode
              'pdf-occur-buffer-mode)
          (let* ((paths (mapconcat
