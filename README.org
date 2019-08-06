@@ -4,30 +4,35 @@ This project was inspired by and built upon ~org-pdfview~ from @markus1189.
 
 * Current features
 The provided function includes:
-- (Sort-of) backward compatibility with org-pdfview: simply change the link prefix from
+- [X] (Sort-of) backward compatibility with org-pdfview: simply change the link prefix from
   ~pdfview:~ to ~pdftools:~.
-- The reason this URL prefix change was proposed is that ~pdftools:~ links can
+- [X] The reason this URL prefix change was proposed is that ~pdftools:~ links can
   also point to ~pdf-occur~ searchs. Multi-file search is also supported.
-- Beyond the original link implementation that stores only file path and page
+- [X] Beyond the original link implementation that stores only file path and page
   number, now you can store the precise location of annotations.
-- If there are selected texts on the current PDF page, it will be ~marked-up~
+- [X] If there are selected texts on the current PDF page, it will be ~marked-up~
   using pdf-tools markup functions (by default, underline) automatically and the
   corresponding annotation id is stored in the link.
 
+* Integration with ~org-noter~
+Checkout https://github.com/fuxialexander/org-noter/tree/pdf-notes-booster
+
+- [X] Integrate with ~org-noter~, such that ~org-noter~ can remember the precise
+  location (in the resolution of the exact annotation).
+- [X] Jump from a PDF annotation to a associated org-heading ~org-noter-sync-*~ and
+  ~org-noter-jump-to-heading~.
+- [X] Transform old org-noter notes to newer ones and sync with the corresponding
+  PDF. ~org-noter-convert-old-notes~
+- [-] PDF annotation will have full and synced information with the associated
+  org-note. (Besides the note content, each annotate will record the IDs of the
+  corresponding org heading and potentially even it's parent org heading, such
+  that tree-rebuild is possible.)
+ 
 * Planed features
 This is the first step of a set of overhauls of Emacs PDF notetaking experience.
 The features below are planned (either in this package or as PR to other
 packages):
-- [ ] Integrate with ~org-noter~, such that ~org-noter~ can remember the precise
-  location (in the resolution of the exact annotation).
-- [ ] PDF annotation will have full and synced information with the associated
-  org-note. (Besides the note content, potentially each annotate will record the
-  IDs of the corresponding org heading and even it's parent org heading, such
-  that tree-rebuild is possible.)
-- [ ] Jump from a PDF annotation to a associated org-heading.
 - [ ] Optionally grab image/text excerpt from the PDF and insert below the
   corresponding org-heading.
 - [ ] Link export with image/text-based excerpt from the PDF.
-- [ ] (Long-term) transform old org-noter notes to newer ones and sync with the
-  corresponding PDF.
 - [ ] (Long-term) Org <-> PDF Annotation converter.
