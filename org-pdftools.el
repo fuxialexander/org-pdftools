@@ -197,7 +197,8 @@ Can be one of highlight/underline/strikeout/squiggly."
                 (pdf-view-active-region t)
                 org-pdftools-markup-pointer-color
                 `((opacity . ,org-pdftools-markup-pointer-opacity))))
-            (if (pdf-annot-getannots page)
+            (if (and (not org-noter--session)
+                     (pdf-annot-getannots page))
                 (condition-case-unless-debug
                     nil
                     (pdf-annot-get-id
