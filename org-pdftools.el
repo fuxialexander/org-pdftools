@@ -181,7 +181,7 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 (add-hook 'org-store-link-functions 'org-pdftools-store-link)
 
-(defun org-pdftools-get-link ()
+(defun org-pdftools-get-link (from-org-noter)
   "Get link from the active pdf buffer."
   (let* ((path (concat
                 org-pdftools-root-dir
@@ -197,7 +197,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                 (pdf-view-active-region t)
                 org-pdftools-markup-pointer-color
                 `((opacity . ,org-pdftools-markup-pointer-opacity))))
-            (if (and (not org-noter--session)
+            (if (and (not from-org-noter)
                      (pdf-annot-getannots page))
                 (condition-case-unless-debug
                     nil
@@ -216,7 +216,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                     `((color . ,org-pdftools-free-pointer-color)
                       (opacity . ,org-pdftools-free-pointer-opacity))))
                 nil))))
-         (height (cond ((boundp 'annot-id)
+         (height (cond ((bound-and-true-p annot-id)
                         (nth 1 (pdf-annot-get
                                 (pdf-info-getannot
                                  annot-id
