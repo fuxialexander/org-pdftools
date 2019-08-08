@@ -181,7 +181,7 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 (add-hook 'org-store-link-functions 'org-pdftools-store-link)
 
-(defun org-pdftools-get-link (from-org-noter)
+(defun org-pdftools-get-link (&optional from-org-noter)
   "Get link from the active pdf buffer."
   (let* ((path (concat
                 org-pdftools-root-dir
