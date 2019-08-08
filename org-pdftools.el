@@ -177,59 +177,10 @@ Can be one of highlight/underline/strikeout/squiggly."
                  (org-noter--with-valid-session
                   (with-selected-window
                       (org-noter--get-doc-window)
-                    (let* ((matches (pdf-info-search-regexp
-                                     search-string
-                                     page))
-                           (edges (apply
-                                   'append
-                                   (map
-                                    'list
-                                    (lambda (a)
-                                      (alist-get 'edges a))
-                                    matches))))
-                      (cl-destructuring-bind
-                          (fg1 bg1 fg2 bg2)
-                          (pdf-isearch-current-colors)
-                        (pdf-info-renderpage-text-regions
-                         page
-                         (car (pdf-view-image-size))
-                         t
-                         nil
-                         (append `(,fg1 ,bg1) edges))))))
-               (let* ((matches (pdf-info-search-regexp
-                                search-string
-                                page))
-                      (edges (apply
-                              'append
-                              (map
-                               'list
-                               (lambda (a)
-                                 (alist-get 'edges a))
-                               matches)))
-                      (width (car (pdf-view-image-size)))
-                      (window (selected-window))
-                      (buffer (current-buffer))
-                      (pdf-info-asynchronous
-                       (lambda (status data)
-                         (when (and (null status)
-                                    (buffer-live-p buffer)
-                                    (window-live-p window)
-                                    (eq (window-buffer window)
-                                        buffer))
-                           (with-selected-window window
-                             (when (and (derived-mode-p 'pdf-view-mode)
-                                        (eq page (pdf-view-current-page)))
-                               (pdf-view-display-image
-                                (pdf-view-create-image data))))))))
-                 (cl-destructuring-bind
-                     (fg1 bg1 fg2 bg2)
-                     (pdf-isearch-current-colors)
-                   (pdf-info-renderpage-text-regions
-                    page
-                    (car (pdf-view-image-size))
-                    t
-                    (current-buffer)
-                    (append `(,fg1 ,bg1) edges))))))))
+                    (isearch-mode t)
+                    (isearch-yank-string search-string)))
+               (isearch-mode t)
+               (isearch-yank-string search-string)))))
         ((string-match
           "\\(.*\\)@@\\(.*\\)"
           link)
@@ -265,33 +216,42 @@ Can be one of highlight/underline/strikeout/squiggly."
                  buffer-file-name
                  org-pdftools-root-dir)))
          (page (pdf-view-current-page))
-         (annot-id
-          (if (pdf-view-active-region-p)
-              (pdf-annot-get-id
-               (funcall
-                org-pdftools-markup-pointer-function
-                (pdf-view-active-region t)
-                org-pdftools-markup-pointer-color
-                `((opacity . ,org-pdftools-markup-pointer-opacity))))
-            (if (and (not from-org-noter)
-                     (pdf-annot-getannots page))
-                (condition-case-unless-debug
-                    nil
-                    (pdf-annot-get-id
-                     (pdf-annot-read-annotation
-                      "Click the annotation that you want to link to."))
-                  (error (message "error")))
-              (if (y-or-n-p
-                   "Do you want to create a free pointer annotation for the link?")
-                  (pdf-annot-get-id
-                   (funcall-interactively
-                    #'pdf-annot-add-text-annotation
-                    (pdf-util-read-image-position
-                     "Click where a new text annotation should be added ...")
-                    org-pdftools-free-pointer-icon
-                    `((color . ,org-pdftools-free-pointer-color)
-                      (opacity . ,org-pdftools-free-pointer-opacity))))
-                nil))))
+         (annot-id (if (pdf-view-active-region-p)
+                       (pdf-annot-get-id
+                        (funcall
+                         org-pdftools-markup-pointer-function
+                         (pdf-view-active-region t)
+                         org-pdftools-markup-pointer-color
+                         `((opacity . ,org-pdftools-markup-pointer-opacity))))
+                     (if (and (not from-org-noter)
+                              (pdf-annot-getannots page))
+                         (condition-case nil
+                             (pdf-annot-get-id
+                              (pdf-annot-read-annotation
+                               "Click the annotation that you want to link to."))
+                           (error
+                            (if (y-or-n-p
+                                 "Do you want to create a free pointer annotation for the link?")
+                                (pdf-annot-get-id
+                                 (funcall-interactively
+                                  #'pdf-annot-add-text-annotation
+                                  (pdf-util-read-image-position
+                                   "Click where a new text annotation should be added ...")
+                                  org-pdftools-free-pointer-icon
+                                  `((color . ,org-pdftools-free-pointer-color)
+                                    (opacity . ,org-pdftools-free-pointer-opacity))))
+                              nil)))
+                       (if (y-or-n-p
+                            "Do you want to create a free pointer annotation for the link?")
+                           (pdf-annot-get-id
+                            (funcall-interactively
+                             #'pdf-annot-add-text-annotation
+                             (pdf-util-read-image-position
+                              "Click where a new text annotation should be added ...")
+                             org-pdftools-free-pointer-icon
+                             `((color . ,org-pdftools-free-pointer-color)
+                               (opacity . ,org-pdftools-free-pointer-opacity))))
+                         nil))))
          (height (cond ((bound-and-true-p annot-id)
                         (nth 1 (pdf-annot-get
                                 (pdf-info-getannot
@@ -307,7 +267,12 @@ Can be one of highlight/underline/strikeout/squiggly."
                           (frame-char-height))
                          (float
                           (cdr (pdf-view-image-size)))))))
-         ;; pdftools://path::page++height_percent;;annot_id
+         ;; pdftools://path::page++height_percent;;annot_id\\|$$search-string
+         (search-string (if (and (not annot-id)
+                                 (y-or-n-p
+                                  "Do you want to add a isearch link?"))
+                            isearch-string
+                          ""))
          (link (concat
                 "pdftools:"
                 path
@@ -319,7 +284,15 @@ Can be one of highlight/underline/strikeout/squiggly."
                     (concat
                      ";;"
                      (symbol-name annot-id))
-                  nil))))
+                  (if (not (string-empty-p search-string))
+                      (concat
+                       "$$"
+                       (replace-regexp-in-string
+                        " "
+                        "%20"
+                        search-string))
+                    (message
+                     "   Reminder: You haven't performed a isearch!"))))))
     link))
 
 (defun org-pdftools-store-link ()
