@@ -91,12 +91,26 @@ Can be one of highlight/underline/strikeout/squiggly."
 ;; pdftools://path::page++height_percent;;annot_id@@search_string
 (defun org-pdftools-open-pdftools (link)
   (cond ((string-match
-          "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\)?\\(.*\\)?"
+          "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|\\$\\$\\)?\\(.*\\)?"
           link)
          (let ((path (match-string 1 link))
                (page (match-string 2 link))
                (height (match-string 4 link))
-               (annot-id (match-string 6 link)))
+               annot-id
+               search-string)
+           (cond ((string-equal
+                   (match-string 5 link)
+                   ";;")
+                  (setq annot-id
+                   (match-string 6 link)))
+                 ((string-equal
+                   (match-string 5 link)
+                   "$$")
+                  (setq search-string
+                   (replace-regexp-in-string
+                    "%20"
+                    " "
+                    (match-string 6 link)))))
            (when (and path
                       (not (string-empty-p path)))
              (if org-noter--session
@@ -114,14 +128,17 @@ Can be one of highlight/underline/strikeout/squiggly."
                             '(file . find-file-other-frame))
                         (org-open-file path 1)))))
                (org-open-file path 1)))
-           (when (and page
-                      (not (string-empty-p page)))
-             (if org-noter--session
-                 (org-noter--with-valid-session
-                  (with-selected-window
-                      (org-noter--get-doc-window)
-                    (pdf-view-goto-page (string-to-number page))))
-               (pdf-view-goto-page (string-to-number page))))
+           (if (and page
+                    (not (string-empty-p page)))
+               (progn
+                 (setq page (string-to-number page))
+                 (if org-noter--session
+                     (org-noter--with-valid-session
+                      (with-selected-window
+                          (org-noter--get-doc-window)
+                        (pdf-view-goto-page page)))
+                   (pdf-view-goto-page page)))
+             (setq page nil))
            (when (and height
                       (not (string-empty-p height)))
              (if org-noter--session
@@ -153,7 +170,66 @@ Can be one of highlight/underline/strikeout/squiggly."
                      t)))
                (pdf-annot-show-annotation
                 (pdf-info-getannot annot-id)
-                t)))))
+                t)))
+           (when (and search-string
+                      (not (string-empty-p search-string)))
+             (if org-noter--session
+                 (org-noter--with-valid-session
+                  (with-selected-window
+                      (org-noter--get-doc-window)
+                    (let* ((matches (pdf-info-search-regexp
+                                     search-string
+                                     page))
+                           (edges (apply
+                                   'append
+                                   (map
+                                    'list
+                                    (lambda (a)
+                                      (alist-get 'edges a))
+                                    matches))))
+                      (cl-destructuring-bind
+                          (fg1 bg1 fg2 bg2)
+                          (pdf-isearch-current-colors)
+                        (pdf-info-renderpage-text-regions
+                         page
+                         (car (pdf-view-image-size))
+                         t
+                         nil
+                         (append `(,fg1 ,bg1) edges))))))
+               (let* ((matches (pdf-info-search-regexp
+                                search-string
+                                page))
+                      (edges (apply
+                              'append
+                              (map
+                               'list
+                               (lambda (a)
+                                 (alist-get 'edges a))
+                               matches)))
+                      (width (car (pdf-view-image-size)))
+                      (window (selected-window))
+                      (buffer (current-buffer))
+                      (pdf-info-asynchronous
+                       (lambda (status data)
+                         (when (and (null status)
+                                    (buffer-live-p buffer)
+                                    (window-live-p window)
+                                    (eq (window-buffer window)
+                                        buffer))
+                           (with-selected-window window
+                             (when (and (derived-mode-p 'pdf-view-mode)
+                                        (eq page (pdf-view-current-page)))
+                               (pdf-view-display-image
+                                (pdf-view-create-image data))))))))
+                 (cl-destructuring-bind
+                     (fg1 bg1 fg2 bg2)
+                     (pdf-isearch-current-colors)
+                   (pdf-info-renderpage-text-regions
+                    page
+                    (car (pdf-view-image-size))
+                    t
+                    (current-buffer)
+                    (append `(,fg1 ,bg1) edges))))))))
         ((string-match
           "\\(.*\\)@@\\(.*\\)"
           link)
