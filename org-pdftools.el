@@ -113,7 +113,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                     (match-string 6 link)))))
            (when (and path
                       (not (string-empty-p path)))
-             (if org-noter--session
+             (if (bound-and-true-p org-noter--session)
                  (org-noter--with-valid-session
                   (let ((doc (with-selected-window
                                  (org-noter--get-doc-window)
@@ -132,7 +132,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                     (not (string-empty-p page)))
                (progn
                  (setq page (string-to-number page))
-                 (if org-noter--session
+                 (if (bound-and-true-p org-noter--session)
                      (org-noter--with-valid-session
                       (with-selected-window
                           (org-noter--get-doc-window)
@@ -141,7 +141,7 @@ Can be one of highlight/underline/strikeout/squiggly."
              (setq page nil))
            (when (and height
                       (not (string-empty-p height)))
-             (if org-noter--session
+             (if (bound-and-true-p org-noter--session)
                  (org-noter--with-valid-session
                   (with-selected-window
                       (org-noter--get-doc-window)
@@ -161,7 +161,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                   (frame-char-height))))))
            (when (and annot-id
                       (not (string-empty-p annot-id)))
-             (if org-noter--session
+             (if (bound-and-true-p org-noter--session)
                  (org-noter--with-valid-session
                   (with-selected-window
                       (org-noter--get-doc-window)
@@ -173,7 +173,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                 t)))
            (when (and search-string
                       (not (string-empty-p search-string)))
-             (if org-noter--session
+             (if (bound-and-true-p org-noter--session)
                  (org-noter--with-valid-session
                   (with-selected-window
                       (org-noter--get-doc-window)
