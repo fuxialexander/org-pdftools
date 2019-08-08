@@ -8,6 +8,7 @@ The provided function includes:
   ~pdfview:~ to ~pdftools:~.
 - [X] The reason this URL prefix change was proposed is that ~pdftools:~ links can
   also point to ~pdf-occur~ searchs. Multi-file search is also supported.
+- [X] There is also support for ~pdf-isearch~.
 - [X] Beyond the original link implementation that stores only file path and page
   number, now you can store the precise location of annotations.
 - [X] If there are selected texts on the current PDF page, it will be ~marked-up~
