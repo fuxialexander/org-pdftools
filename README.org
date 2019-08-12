@@ -2,6 +2,12 @@
 
 This project was inspired by and built upon ~org-pdfview~ from @markus1189.
 
+* Usage
+```lisp
+(use-package org-pdftools
+   :config (setq org-pdftools-root-dir /path/you/store/pdfs))
+```
+
 * Current features
 The provided function includes:
 - [X] (Sort-of) backward compatibility with org-pdfview: simply change the link prefix from
