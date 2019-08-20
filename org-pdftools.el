@@ -124,8 +124,8 @@ Can be one of highlight/underline/strikeout/squiggly."
                     (if (string-equal doc fullpath)
                         (select-window
                          (org-noter--get-doc-window))
-                      (let (org-link-frame-setup
-                            '(file . find-file-other-frame))
+                      (let ((org-link-frame-setup
+                             '(file . find-file-other-frame)))
                         (org-open-file path 1)))))
                (org-open-file path 1)))
            (if (and page
