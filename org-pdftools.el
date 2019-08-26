@@ -88,6 +88,12 @@ Can be one of highlight/underline/strikeout/squiggly."
    'org-store-link-functions
    'org-pdftools-store-link))
 
+;; org 9.3 and later use org-link-store-props
+;; before that it was org-store-link-props, also used by this code
+;; alias if required so that this code works on old or new orgmode
+(unless (fboundp 'org-link-store-props)
+  (defalias 'org-link-store-props 'org-store-link-props))
+
 ;; pdftools://path::page++height_percent;;annot_id@@search_string
 (defun org-pdftools-open-pdftools (link)
   (cond ((string-match
