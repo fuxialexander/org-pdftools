@@ -1,4 +1,4 @@
-;;; org-pdfview.el --- Support for links to documents in pdfview mode
+;;; org-pdftools.el --- Support for links to documents in pdfview mode
 ;; Copyright (C) 2019 Alexander Fu Xi
 
 ;; Author: Alexander Fu Xi <fuxialexander@gmail.com>
@@ -379,4 +379,4 @@ and append it."
 
 
 (provide 'org-pdftools)
-;;; org-pdfview.el ends here
+;;; org-pdftools.el ends here
