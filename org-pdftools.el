@@ -75,18 +75,20 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'float)
 
-(if (fboundp 'org-link-set-parameters)
-    (org-link-set-parameters
-     "pdftools"
-     :follow #'org-pdftools-open
-     :complete #'org-pdftools-complete-link
-     :store #'org-pdftools-store-link)
-  (org-add-link-type
-   "pdftools"
-   'org-pdftools-open)
-  (add-hook
-   'org-store-link-functions
-   'org-pdftools-store-link))
+;;;###autoload
+(eval-after-load "org"
+  '(if (fboundp 'org-link-set-parameters)
+       (org-link-set-parameters
+        "pdftools"
+        :follow #'org-pdftools-open
+        :complete #'org-pdftools-complete-link
+        :store #'org-pdftools-store-link)
+     (org-add-link-type
+      "pdftools"
+      'org-pdftools-open)
+     (add-hook
+      'org-store-link-functions
+      'org-pdftools-store-link)))
 
 ;; org 9.3 and later use org-link-store-props
 ;; before that it was org-store-link-props, also used by this code
@@ -197,6 +199,7 @@ Can be one of highlight/underline/strikeout/squiggly."
             pathlist
             search-string)))))
 
+;;;###autoload
 (defun org-pdftools-open (link)
   (if (and (display-graphic-p)
            (featurep 'pdf-tools))
@@ -301,6 +304,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                      "   Reminder: You haven't performed a isearch!"))))))
     link))
 
+;;;###autoload
 (defun org-pdftools-store-link ()
   "Store a link to a pdfview/pdfoccur buffer."
   (cond ((eq major-mode 'pdf-view-mode)
@@ -363,6 +367,7 @@ Can be one of highlight/underline/strikeout/squiggly."
              (format "%s (%s)" desc path))
             (t path)))))
 
+;;;###autoload
 (defun org-pdftools-complete-link (&optional arg)
   "Use the existing file name completion for file.
 Links to get the file name, then ask the user for the page number
