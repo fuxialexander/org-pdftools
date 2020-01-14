@@ -375,7 +375,7 @@ and append it."
   (concat
    (replace-regexp-in-string
     "^file:"
-    "pdfview:"
+    "pdftools:"
     (org-file-complete-link arg))
    "::"
    (read-from-minibuffer
