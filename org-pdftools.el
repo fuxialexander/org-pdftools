@@ -99,7 +99,7 @@ Can be one of highlight/underline/strikeout/squiggly."
 ;; pdftools://path::page++height_percent;;annot_id@@search_string
 (defun org-pdftools-open-pdftools (link)
   (cond ((string-match
-          "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|\\$\\$\\)?\\(.*\\)?"
+          "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|\\?\\?\\)?\\(.*\\)?"
           link)
          (let ((path (match-string 1 link))
                (page (match-string 2 link))
@@ -113,7 +113,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                    (match-string 6 link)))
                  ((string-equal
                    (match-string 5 link)
-                   "$$")
+                   "??")
                   (setq search-string
                    (replace-regexp-in-string
                     "%20"
@@ -133,7 +133,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                         (select-window
                          (org-noter--get-doc-window))
                       (let ((org-link-frame-setup
-                             '(file . find-file-other-frame)))
+                             (acons 'file 'find-file-other-frame org-link-frame-setup)))
                         (org-open-file path 1)))))
                (org-open-file path 1)))
            (if (and page
@@ -219,8 +219,7 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 (defun org-pdftools-get-link (&optional from-org-noter)
   "Get link from the active pdf buffer."
-  (let* ((path (concat
-                org-pdftools-root-dir
+  (let* ((path (org-pdftools-get-path
                 (file-relative-name
                  buffer-file-name
                  org-pdftools-root-dir)))
@@ -276,7 +275,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                           (frame-char-height))
                          (float
                           (cdr (pdf-view-image-size)))))))
-         ;; pdftools://path::page++height_percent;;annot_id\\|$$search-string
+         ;; pdftools://path::page++height_percent;;annot_id\\|??search-string
          (search-string (if (and (not annot-id)
                                  (y-or-n-p
                                   "Do you want to add a isearch link?"))
@@ -295,7 +294,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                      (symbol-name annot-id))
                   (if (not (string-empty-p search-string))
                       (concat
-                       "$$"
+                       "??"
                        (replace-regexp-in-string
                         " "
                         "%20"
@@ -382,6 +381,13 @@ and append it."
     "Page:"
     "1")))
 
+
+(defun org-pdftools-get-path (rel-path)
+  (let* ((fullpath (expand-file-name rel-path org-pdftools-root-dir))
+         (rel-home-path (file-relative-name fullpath (getenv "HOME"))))
+    (if (string-suffix-p ".." rel-home-path)
+        fullpath
+      (concat "~/" rel-home-path))))
 
 (provide 'org-pdftools)
 ;;; org-pdftools.el ends here
