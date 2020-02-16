@@ -82,7 +82,8 @@ Can be one of highlight/underline/strikeout/squiggly."
         "pdftools"
         :follow #'org-pdftools-open
         :complete #'org-pdftools-complete-link
-        :store #'org-pdftools-store-link)
+        :store #'org-pdftools-store-link
+        :export #'org-pdftools-export)
      (org-add-link-type
       "pdftools"
       'org-pdftools-open)
