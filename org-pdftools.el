@@ -1,11 +1,11 @@
 ;;; org-pdftools.el --- Support for links to documents in pdfview mode
-;; Copyright (C) 2019 Alexander Fu Xi
+;; Copyright (C) 2020 Alexander Fu Xi
 
 ;; Author: Alexander Fu Xi <fuxialexander@gmail.com>
 ;; Maintainer: Alexander Fu Xi <fuxialexnader@gmail.com>
 ;; Keywords: org, pdf-tools
-;; Version: 0.9
-;; Package-Requires: ((org "9.2") (pdf-tools "1.0"))
+;; Version: 1.0
+;; Package-Requires: ((org "9.3") (pdf-tools "1.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -21,13 +21,11 @@
 ;; along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; Add support for org links from pdftools buffers
+;; Add support for org links from pdftools buffers with more precise location control.
 ;;
 ;; To enable this automatically, use:
-;;     (eval-after-load 'org '(require 'org-pdftools))
+;; (use-package org-pdftools :config (setq org-pdftools-root-dir /path/you/store/pdfs))
 
-;; If you want, you can also configure the org-mode default open PDF file function.
-;; (add-to-list 'org-file-apps '("\\.pdf\\'" . (lambda (file link) (org-pdftools-open link))))
 
 ;;; Code:
 (require 'org)
@@ -55,11 +53,11 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'function)
 (defcustom org-pdftools-markup-pointer-color "#A9A9A9"
-  "Color for markup pointer annotations"
+  "Color for markup pointer annotations."
   :group 'org-pdftools
   :type 'string)
 (defcustom org-pdftools-markup-pointer-opacity 1.0
-  "Color for markup pointer annotations"
+  "Opacity for markup pointer annotations."
   :group 'org-pdftools
   :type 'float)
 (defcustom org-pdftools-free-pointer-icon "Circle"
@@ -67,11 +65,11 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'string)
 (defcustom org-pdftools-free-pointer-color "#FFFFFF"
-  "Color for free pointer annotations"
+  "Color for free pointer annotations."
   :group 'org-pdftools
   :type 'string)
 (defcustom org-pdftools-free-pointer-opacity 1.0
-  "Color for free pointer annotations"
+  "Opacity for free pointer annotations."
   :group 'org-pdftools
   :type 'float)
 
@@ -219,7 +217,8 @@ Can be one of highlight/underline/strikeout/squiggly."
 (add-hook 'org-store-link-functions 'org-pdftools-store-link)
 
 (defun org-pdftools-get-link (&optional from-org-noter)
-  "Get link from the active pdf buffer."
+  "Get link from the active pdf buffer.
+Integrate with org-noter when FROM-ORG-NOTER."
   (let* ((path (concat
                 org-pdftools-root-dir
                 (file-relative-name
@@ -241,7 +240,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                                "Click the annotation that you want to link to."))
                            (error
                             (if (y-or-n-p
-                                 "Do you want to create a free pointer annotation for the link?")
+                                 "Do you want to create a free pointer annotation for the link? ")
                                 (pdf-annot-get-id
                                  (funcall-interactively
                                   #'pdf-annot-add-text-annotation
@@ -252,7 +251,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                                     (opacity . ,org-pdftools-free-pointer-opacity))))
                               nil)))
                        (if (y-or-n-p
-                            "Do you want to create a free pointer annotation for the link?")
+                            "Do you want to create a free pointer annotation for the link? ")
                            (pdf-annot-get-id
                             (funcall-interactively
                              #'pdf-annot-add-text-annotation
@@ -372,7 +371,7 @@ Can be one of highlight/underline/strikeout/squiggly."
 (defun org-pdftools-complete-link (&optional arg)
   "Use the existing file name completion for file.
 Links to get the file name, then ask the user for the page number
-and append it."
+and append it. ARG is passed to org-file-complete-link."
   (concat
    (replace-regexp-in-string
     "^file:"
