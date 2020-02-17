@@ -76,16 +76,14 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 ;;;###autoload
 (eval-after-load "org"
-  '(if (fboundp 'org-link-set-parameters)
-       (org-link-set-parameters
-        "pdftools"
-        :follow #'org-pdftools-open
-        :complete #'org-pdftools-complete-link
-        :store #'org-pdftools-store-link
-        :export #'org-pdftools-export)
-     (org-add-link-type
+  '(progn
+     (org-link-set-parameters
       "pdftools"
-      'org-pdftools-open)
+      :follow #'org-pdftools-open
+      :complete #'org-pdftools-complete-link
+      :store #'org-pdftools-store-link
+      :export #'org-pdftools-export)
+
      (add-hook
       'org-store-link-functions
       'org-pdftools-store-link)))
@@ -219,7 +217,7 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 (defun org-pdftools-get-link (&optional from-org-noter)
   "Get link from the active pdf buffer.
-Integrate with org-noter when FROM-ORG-NOTER."
+Integrate with `org-noter' when FROM-ORG-NOTER."
   (let* ((path (concat
                 org-pdftools-root-dir
                 (file-relative-name
@@ -302,7 +300,7 @@ Integrate with org-noter when FROM-ORG-NOTER."
                         "%20"
                         search-string))
                     (message
-                     "   Reminder: You haven't performed a isearch!"))))))
+                     "   Reminder: You haven't performed a isearch!") "")))))
     link))
 
 ;;;###autoload
@@ -372,12 +370,12 @@ Integrate with org-noter when FROM-ORG-NOTER."
 (defun org-pdftools-complete-link (&optional arg)
   "Use the existing file name completion for file.
 Links to get the file name, then ask the user for the page number
-and append it. ARG is passed to org-file-complete-link."
+and append it. ARG is passed to `org-link-complete-file'."
   (concat
    (replace-regexp-in-string
     "^file:"
     "pdftools:"
-    (org-file-complete-link arg))
+    (org-link-complete-file arg))
    "::"
    (read-from-minibuffer
     "Page:"
