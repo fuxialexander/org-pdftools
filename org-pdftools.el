@@ -1,4 +1,4 @@
-;;; org-pdftools.el --- Support for links to documents in pdfview mode
+;;; org-pdftools.el --- Support for links to documents in pdfview mode  -*- lexical-binding: t; -*-
 ;; Copyright (C) 2020 Alexander Fu Xi
 
 ;; Author: Alexander Fu Xi <fuxialexander@gmail.com>
