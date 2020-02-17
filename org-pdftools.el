@@ -3,8 +3,9 @@
 
 ;; Author: Alexander Fu Xi <fuxialexander@gmail.com>
 ;; Maintainer: Alexander Fu Xi <fuxialexnader@gmail.com>
-;; Keywords: org, pdf-tools
+;; Homepage: https://github.com/fuxialexander/org-pdftools
 ;; Version: 1.0
+;; Keywords: convenience
 ;; Package-Requires: ((emacs "26") (org "9.3") (pdf-tools "0.8"))
 
 ;; This program is free software; you can redistribute it and/or modify
