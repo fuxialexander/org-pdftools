@@ -126,10 +126,12 @@ To use this, `org-noter-use-org-id' has to be t."
     (org-noter-pdftools--location-original-property loc)))
 
 (defun org-noter-pdftools--convert-to-location-cons (location)
-  (let ((loc (if (org-noter-pdftools--location-p location)
-                 location
-               (org-noter-pdftools--parse-link location))))
-    (org-noter--location-link-to-cons loc)))
+  (if (and location (consp location))
+      location
+    (let ((loc (if (org-noter-pdftools--location-p location)
+                   location
+                 (org-noter-pdftools--parse-link location))))
+      (org-noter--location-link-to-cons loc))))
 
 (defun org-noter-pdftools--doc-goto-location (mode location)
   (when (and (eq mode 'pdf-view-mode) (org-noter-pdftools--location-p location))
@@ -217,7 +219,7 @@ To use this, `org-noter-use-org-id' has to be t."
               'pdf-view-mode)
           (let* ((document-property (org-noter--session-property-text
                                      session)))
-            (let* ((location (org-noter--location-property
+            (let* ((location (org-noter--parse-location-property
                               (org-entry-get
                                nil
                                org-noter-property-note-location)))
