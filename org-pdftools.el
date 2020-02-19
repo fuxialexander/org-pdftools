@@ -65,6 +65,10 @@ Can be one of highlight/underline/strikeout/squiggly."
   "Color for free pointer annotations. Refer to `pdf-annot-standard-text-icons`."
   :group 'org-pdftools
   :type 'string)
+(defcustom org-pdftools-search-string-seperator "$$"
+  "Seperator of search-string"
+  :group 'org-pdftools
+  :type 'string)
 (defcustom org-pdftools-free-pointer-color "#FFFFFF"
   "Color for free pointer annotations."
   :group 'org-pdftools
@@ -96,106 +100,108 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 ;; pdftools://path::page++height_percent;;annot_id@@search_string
 (defun org-pdftools-open-pdftools (link)
-  (cond ((string-match
-          "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|\\?\\?\\)?\\(.*\\)?"
-          link)
-         (let ((path (match-string 1 link))
-               (page (match-string 2 link))
-               (height (match-string 4 link))
-               annot-id
-               search-string)
-           (cond ((string-equal
-                   (match-string 5 link)
-                   ";;")
-                  (setq annot-id
-                   (match-string 6 link)))
-                 ((string-equal
-                   (match-string 5 link)
-                   "??")
-                  (setq search-string
-                   (replace-regexp-in-string
-                    "%20"
-                    " "
-                    (match-string 6 link)))))
-           (when (and path
-                      (not (string-empty-p path)))
-             (if (bound-and-true-p org-noter--session)
-                 (org-noter--with-valid-session
-                  (let ((doc (with-selected-window
-                                 (org-noter--get-doc-window)
-                               (buffer-file-name)))
-                        (fullpath (expand-file-name
-                                   path
-                                   org-pdftools-root-dir)))
-                    (if (string-equal doc fullpath)
-                        (select-window
-                         (org-noter--get-doc-window))
-                      (let ((org-link-frame-setup
-                             (acons 'file 'find-file-other-frame org-link-frame-setup)))
-                        (org-open-file path 1)))))
-               (org-open-file path 1)))
-           (if (and page
-                    (not (string-empty-p page)))
-               (progn
-                 (setq page (string-to-number page))
-                 (if (bound-and-true-p org-noter--session)
-                     (org-noter--with-valid-session
-                      (with-selected-window
-                          (org-noter--get-doc-window)
-                        (pdf-view-goto-page page)))
-                   (pdf-view-goto-page page)))
-             (setq page nil))
-           (when (and height
-                      (not (string-empty-p height)))
-             (if (bound-and-true-p org-noter--session)
-                 (org-noter--with-valid-session
-                  (with-selected-window
-                      (org-noter--get-doc-window)
-                    (image-set-window-vscroll
-                     (round
-                      (/
-                       (*
-                        (string-to-number height)
-                        (cdr (pdf-view-image-size)))
-                       (frame-char-height))))))
-               (image-set-window-vscroll
-                (round
-                 (/
-                  (*
-                   (string-to-number height)
-                   (cdr (pdf-view-image-size)))
-                  (frame-char-height))))))
-           (when (and annot-id
-                      (not (string-empty-p annot-id)))
-             (if (bound-and-true-p org-noter--session)
-                 (org-noter--with-valid-session
-                  (with-selected-window
-                      (org-noter--get-doc-window)
-                    (pdf-annot-show-annotation
-                     (pdf-info-getannot annot-id)
-                     t)))
-               (pdf-annot-show-annotation
-                (pdf-info-getannot annot-id)
-                t)))
-           (when (and search-string
-                      (not (string-empty-p search-string)))
-             (if (bound-and-true-p org-noter--session)
-                 (org-noter--with-valid-session
-                  (with-selected-window
-                      (org-noter--get-doc-window)
-                    (isearch-mode t)
-                    (isearch-yank-string search-string)))
-               (isearch-mode t)
-               (isearch-yank-string search-string)))))
-        ((string-match
-          "\\(.*\\)@@\\(.*\\)"
-          link)
-         (let* ((paths (match-string 1 link))
-                (search-string (match-string 2 link))
-                (pathlist (split-string paths "%&%")))
-           (pdf-occur-search
-            pathlist
-            search-string)))))
+  (let ((link-regexp
+         (concat "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|"
+                 (regexp-quote org-pdftools-search-string-seperator)
+                 "\\)?\\(.*\\)")))
+    (cond ((string-match link-regexp link)
+           (let ((path (match-string 1 link))
+                 (page (match-string 2 link))
+                 (height (match-string 4 link))
+                 annot-id
+                 search-string)
+             (cond ((string-equal
+                     (match-string 5 link)
+                     ";;")
+                    (setq annot-id
+                          (match-string 6 link)))
+                   ((string-equal
+                     (match-string 5 link)
+                     org-pdftools-search-string-seperator)
+                    (setq search-string
+                          (replace-regexp-in-string
+                           "%20"
+                           " "
+                           (match-string 6 link)))))
+             (when (and path
+                        (not (string-empty-p path)))
+               (if (bound-and-true-p org-noter--session)
+                   (org-noter--with-valid-session
+                    (let ((doc (with-selected-window
+                                   (org-noter--get-doc-window)
+                                 (buffer-file-name)))
+                          (fullpath (expand-file-name
+                                     path
+                                     org-pdftools-root-dir)))
+                      (if (string-equal doc fullpath)
+                          (select-window
+                           (org-noter--get-doc-window))
+                        (let ((org-link-frame-setup
+                               (acons 'file 'find-file-other-frame org-link-frame-setup)))
+                          (org-open-file path 1)))))
+                 (org-open-file path 1)))
+             (if (and page
+                      (not (string-empty-p page)))
+                 (progn
+                   (setq page (string-to-number page))
+                   (if (bound-and-true-p org-noter--session)
+                       (org-noter--with-valid-session
+                        (with-selected-window
+                            (org-noter--get-doc-window)
+                          (pdf-view-goto-page page)))
+                     (pdf-view-goto-page page)))
+               (setq page nil))
+             (when (and height
+                        (not (string-empty-p height)))
+               (if (bound-and-true-p org-noter--session)
+                   (org-noter--with-valid-session
+                    (with-selected-window
+                        (org-noter--get-doc-window)
+                      (image-set-window-vscroll
+                       (round
+                        (/
+                         (*
+                          (string-to-number height)
+                          (cdr (pdf-view-image-size)))
+                         (frame-char-height))))))
+                 (image-set-window-vscroll
+                  (round
+                   (/
+                    (*
+                     (string-to-number height)
+                     (cdr (pdf-view-image-size)))
+                    (frame-char-height))))))
+             (when (and annot-id
+                        (not (string-empty-p annot-id)))
+               (if (bound-and-true-p org-noter--session)
+                   (org-noter--with-valid-session
+                    (with-selected-window
+                        (org-noter--get-doc-window)
+                      (pdf-annot-show-annotation
+                       (pdf-info-getannot annot-id)
+                       t)))
+                 (pdf-annot-show-annotation
+                  (pdf-info-getannot annot-id)
+                  t)))
+             (when (and search-string
+                        (not (string-empty-p search-string)))
+               (if (bound-and-true-p org-noter--session)
+                   (org-noter--with-valid-session
+                    (with-selected-window
+                        (org-noter--get-doc-window)
+                      (isearch-mode t)
+                      (isearch-yank-string search-string)))
+                 (isearch-mode t)
+                 (isearch-yank-string search-string)))))
+          ((string-match
+            "\\(.*\\)@@\\(.*\\)"
+            link)
+           (let* ((paths (match-string 1 link))
+                  (search-string (match-string 2 link))
+                  (pathlist (split-string paths "%&%")))
+             (pdf-occur-search
+              pathlist
+              search-string))))))
 
 ;;;###autoload
 (defun org-pdftools-open (link)
@@ -293,7 +299,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                      (symbol-name annot-id))
                   (if (not (string-empty-p search-string))
                       (concat
-                       "??"
+                       org-pdftools-search-string-seperator
                        (replace-regexp-in-string
                         " "
                         "%20"
