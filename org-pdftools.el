@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/fuxialexander/org-pdftools
 ;; Version: 1.0
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "26") (org "9.3") (pdf-tools "0.8"))
+;; Package-Requires: ((emacs "26") (org "9.3") (pdf-tools "0.8") (org-noter "1.4.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program. If not, see <http://www.gnu.org/licenses/>.
+;; along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;; Add support for org links from pdftools buffers with more precise location control.
@@ -31,6 +31,7 @@
 ;;; Code:
 (require 'org)
 (require 'org-refile)
+(require 'org-noter)
 (require 'pdf-tools)
 (require 'pdf-view)
 (require 'pdf-annot)
@@ -79,25 +80,6 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'float)
 
-;;;###autoload
-(eval-after-load "org"
-  '(progn
-     (org-link-set-parameters
-      "pdftools"
-      :follow #'org-pdftools-open
-      :complete #'org-pdftools-complete-link
-      :store #'org-pdftools-store-link
-      :export #'org-pdftools-export)
-
-     (add-hook
-      'org-store-link-functions
-      'org-pdftools-store-link)))
-
-;; org 9.3 and later use org-link-store-props
-;; before that it was org-store-link-props, also used by this code
-;; alias if required so that this code works on old or new orgmode
-(unless (fboundp 'org-link-store-props)
-  (defalias 'org-link-store-props 'org-store-link-props))
 
 ;; pdftools://path::page++height_percent;;annot_id@@search_string
 (defun org-pdftools-open-pdftools (link)
@@ -222,8 +204,6 @@ Can be one of highlight/underline/strikeout/squiggly."
                      (match-string 1 link))))
         (org-open-file path)))))
 
-(add-hook 'org-store-link-functions 'org-pdftools-store-link)
-
 (defun org-pdftools-get-link (&optional from-org-noter)
   "Get link from the active pdf buffer.
 Integrate with `org-noter' when FROM-ORG-NOTER."
@@ -324,10 +304,16 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                            'identity
                            (pdf-view-active-region-text)
                            ? )))))
-           (org-link-store-props
-            :type "pdftools"
-            :link (org-pdftools-get-link)
-            :description desc)))
+           (if (fboundp #'org-link-store-props)
+               (org-link-store-props
+                :type "pdftools"
+                :link (org-pdftools-get-link)
+                :description desc)
+             (org-store-link-props
+              :type "pdftools"
+              :link (org-pdftools-get-link)
+              :description desc))
+           ))
         ((eq major-mode
              'pdf-occur-buffer-mode)
          (let* ((paths (mapconcat
@@ -342,12 +328,16 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                        paths
                        "@@"
                        search-string)))
-           (org-link-store-props
-            :type "pdftools"
-            :link link
-            :description (concat
-                          "Search PDF for: "
-                          search-string))))))
+           (if (fboundp #'org-link-store-props)
+               (org-link-store-props
+                :type "pdftools"
+                :link (org-pdftools-get-link)
+                :description desc)
+             (org-store-link-props
+              :type "pdftools"
+              :link (org-pdftools-get-link)
+              :description desc))
+           ))))
 
 (defun org-pdftools-export (link description format)
   "Export the pdfview LINK with DESCRIPTION for FORMAT from Org files."
