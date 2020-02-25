@@ -30,6 +30,7 @@
 
 ;;; Code:
 (require 'org)
+(require 'org-refile)
 (require 'pdf-tools)
 (require 'pdf-view)
 (require 'pdf-annot)
@@ -66,7 +67,7 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'string)
 (defcustom org-pdftools-search-string-seperator "$$"
-  "Seperator of search-string"
+  "Seperator of search-string."
   :group 'org-pdftools
   :type 'string)
 (defcustom org-pdftools-free-pointer-color "#FFFFFF"
@@ -100,6 +101,7 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 ;; pdftools://path::page++height_percent;;annot_id@@search_string
 (defun org-pdftools-open-pdftools (link)
+  "Internal function to open org-pdftools LINK."
   (let ((link-regexp
          (concat "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|"
                  (regexp-quote org-pdftools-search-string-seperator)
@@ -205,13 +207,14 @@ Can be one of highlight/underline/strikeout/squiggly."
 
 ;;;###autoload
 (defun org-pdftools-open (link)
+  "Function to open org-pdftools LINK."
   (if (and (display-graphic-p)
            (featurep 'pdf-tools))
       (org-pdftools-open-pdftools
        link)
     (if (bound-and-true-p org-pdftools-open-custom-open)
         (funcall
-         #'org-pdftools-open-custom-open
+         org-pdftools-open-custom-open
          link)
       (let* ((path (when (string-match
                           "\\(.+\\)::.+"
@@ -283,7 +286,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
          ;; pdftools://path::page++height_percent;;annot_id\\|??search-string
          (search-string (if (and (not annot-id)
                                  (y-or-n-p
-                                  "Do you want to add a isearch link?"))
+                                  "Do you want to add a isearch link? "))
                             isearch-string
                           ""))
          (link (concat
@@ -388,6 +391,7 @@ and append it. ARG is passed to `org-link-complete-file'."
 
 
 (defun org-pdftools-get-path (rel-path)
+  "Get full path from REL-PATH."
   (let* ((fullpath (expand-file-name rel-path org-pdftools-root-dir))
          (rel-home-path (file-relative-name fullpath (getenv "HOME"))))
     (if (string-suffix-p ".." rel-home-path)
