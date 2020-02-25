@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/fuxialexander/org-pdftools
 ;; Version: 1.0
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "26") (org "9.3") (pdf-tools "0.8") (org-noter "1.4.1"))
+;; Package-Requires: ((emacs "26.1") (org "9.3") (pdf-tools "0.8") (org-noter "1.4.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -312,8 +312,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
              (org-store-link-props
               :type "pdftools"
               :link (org-pdftools-get-link)
-              :description desc))
-           ))
+              :description desc))))
         ((eq major-mode
              'pdf-occur-buffer-mode)
          (let* ((paths (mapconcat
@@ -336,8 +335,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
              (org-store-link-props
               :type "pdftools"
               :link (org-pdftools-get-link)
-              :description desc))
-           ))))
+              :description desc))))))
 
 (defun org-pdftools-export (link description format)
   "Export the pdfview LINK with DESCRIPTION for FORMAT from Org files."
