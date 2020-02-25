@@ -6,17 +6,17 @@ This project was inspired by and built upon ~org-pdfview~ from @markus1189.
 
 #+BEGIN_SRC elisp
 (use-package org-pdftools
-  :config (setq org-pdftools-root-dir /path/you/store/pdfs))
+  :config (setq org-pdftools-root-dir /path/you/store/pdfs)
+  (with-eval-after-load 'org
+    (org-link-set-parameters "pdftools"
+                             :follow #'org-pdftools-open
+                             :complete #'org-pdftools-complete-link
+                             :store #'org-pdftools-store-link
+                             :export #'org-pdftools-export)
+    (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
 
-(with-eval-after-load 'org
-  (org-link-set-parameters "pdftools"
-   :follow #'org-pdftools-open
-   :complete #'org-pdftools-complete-link
-   :store #'org-pdftools-store-link
-   :export #'org-pdftools-export)
-
-  (add-hook 'org-store-link-functions 'org-pdftools-store-link))
-
+(use-package org-noter-pdftools
+  :after (org-noter))
 #+END_SRC
 
 * Current features

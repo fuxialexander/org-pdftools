@@ -600,7 +600,7 @@ Only available with PDF Tools."
                  (setq last-absolute-level (+ top-level relative-level)
                        level last-absolute-level))
 
-               (org-noter--insert-heading level title location)
+               (org-noter--insert-heading level title nil location)
 
                (when (car contents)
                  (org-noter--insert-heading (1+ level) "Contents")
