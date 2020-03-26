@@ -133,7 +133,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
 
   (when (org-noter-pdftools--location-link-p property)
     (let ((link-regexp (concat "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;"
-                               (regexp-quote org-pdftools-search-string-seperator)
+                               (regexp-quote org-pdftools-search-string-separator)
                                "\\)?\\(.*\\)?")))
       (string-match link-regexp property)
       (let ((path (match-string 1 property))
@@ -142,7 +142,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
             annot-id search-string)
         (cond ((string-equal (match-string 5 property) ";;")
                (setq annot-id (match-string 6 property)))
-              ((string-equal (match-string 5 property) org-pdftools-search-string-seperator)
+              ((string-equal (match-string 5 property) org-pdftools-search-string-separator)
                (setq search-string (replace-regexp-in-string "%20" " " (match-string 6 property)))))
         (make-org-noter-pdftools--location
          :path path
@@ -432,7 +432,7 @@ Only available with PDF Tools."
                               (number-to-string page)
                               "++"
                               (number-to-string top)
-                              org-pdftools-search-string-seperator
+                              org-pdftools-search-string-separator
                               (replace-regexp-in-string
                                " "
                                "%20"

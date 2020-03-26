@@ -69,8 +69,8 @@ Can be one of highlight/underline/strikeout/squiggly."
   "Color for free pointer annotations. Refer to `pdf-annot-standard-text-icons`."
   :group 'org-pdftools
   :type 'string)
-(defcustom org-pdftools-search-string-seperator "$$"
-  "Seperator of search-string."
+(defcustom org-pdftools-search-string-separator "$$"
+  "Separator of search-string."
   :group 'org-pdftools
   :type 'string)
 (defcustom org-pdftools-free-pointer-color "#FFFFFF"
@@ -88,7 +88,7 @@ Can be one of highlight/underline/strikeout/squiggly."
   "Internal function to open org-pdftools LINK."
   (let ((link-regexp
          (concat "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|"
-                 (regexp-quote org-pdftools-search-string-seperator)
+                 (regexp-quote org-pdftools-search-string-separator)
                  "\\)?\\(.*\\)")))
     (cond ((string-match link-regexp link)
            (let ((path (match-string 1 link))
@@ -103,7 +103,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                           (match-string 6 link)))
                    ((string-equal
                      (match-string 5 link)
-                     org-pdftools-search-string-seperator)
+                     org-pdftools-search-string-separator)
                     (setq search-string
                           (replace-regexp-in-string
                            "%20"
@@ -284,7 +284,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                      (symbol-name annot-id))
                   (if (not (string-empty-p search-string))
                       (concat
-                       org-pdftools-search-string-seperator
+                       org-pdftools-search-string-separator
                        (replace-regexp-in-string
                         " "
                         "%20"
