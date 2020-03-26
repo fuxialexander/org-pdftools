@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/fuxialexander/org-pdftools
 ;; Version: 1.0
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "26.1") (org "9.3") (pdf-tools "0.8") (org-noter "1.4.1"))
+;; Package-Requires: ((emacs "26.1") (org "9.4") (pdf-tools "0.8") (org-noter "1.4.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@
 
 
 ;;; Code:
+(require 'subr-x)
+(require 'cl-lib)
 (require 'org)
 (require 'org-refile)
 (require 'org-noter)
@@ -45,7 +47,7 @@
 (defcustom org-pdftools-open-custom-open nil
   "Custom function to open linked pdf files."
   :group 'org-pdftools
-  :type 'function)
+  :type '(choice function nil))
 (defcustom org-pdftools-export-style 'pdftools
   "Export style of org-pdftools links."
   :group 'org-pdftools
@@ -81,7 +83,7 @@ Can be one of highlight/underline/strikeout/squiggly."
   :type 'float)
 
 
-;; pdftools://path::page++height_percent;;annot_id@@search_string
+;; pdftools://path::page++height_percent;;annot_id$$isearch_string or @@occur_search_string
 (defun org-pdftools-open-pdftools (link)
   "Internal function to open org-pdftools LINK."
   (let ((link-regexp
@@ -121,7 +123,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                           (select-window
                            (org-noter--get-doc-window))
                         (let ((org-link-frame-setup
-                               (acons 'file 'find-file-other-frame org-link-frame-setup)))
+                               (cl-acons 'file 'find-file-other-frame org-link-frame-setup)))
                           (org-open-file path 1)))))
                  (org-open-file path 1)))
              (if (and page
@@ -181,11 +183,11 @@ Can be one of highlight/underline/strikeout/squiggly."
             "\\(.*\\)@@\\(.*\\)"
             link)
            (let* ((paths (match-string 1 link))
-                  (search-string (match-string 2 link))
+                  (occur-search-string (match-string 2 link))
                   (pathlist (split-string paths "%&%")))
              (pdf-occur-search
               pathlist
-              search-string))))))
+              occur-search-string))))))
 
 ;;;###autoload
 (defun org-pdftools-open (link)
@@ -227,7 +229,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                                "Click the annotation that you want to link to."))
                            (error
                             (if (y-or-n-p
-                                 "Do you want to create a free pointer annotation for the link? ")
+                                 "You can click anywhere on the page to add a link to. Do you want to do that? ")
                                 (pdf-annot-get-id
                                  (funcall-interactively
                                   #'pdf-annot-add-text-annotation
@@ -238,7 +240,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                                     (opacity . ,org-pdftools-free-pointer-opacity))))
                               nil)))
                        (if (y-or-n-p
-                            "Do you want to create a free pointer annotation for the link? ")
+                            "You can click anywhere on the page to add a link to. Do you want to do that? ")
                            (pdf-annot-get-id
                             (funcall-interactively
                              #'pdf-annot-add-text-annotation
@@ -304,15 +306,10 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                            'identity
                            (pdf-view-active-region-text)
                            ? )))))
-           (if (fboundp #'org-link-store-props)
-               (org-link-store-props
+         (org-link-store-props
                 :type "pdftools"
                 :link (org-pdftools-get-link)
-                :description desc)
-             (org-store-link-props
-              :type "pdftools"
-              :link (org-pdftools-get-link)
-              :description desc))))
+                :description desc)))
         ((eq major-mode
              'pdf-occur-buffer-mode)
          (let* ((paths (mapconcat
@@ -321,21 +318,16 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                          #'car
                          pdf-occur-search-documents)
                         "%&%"))
-                (search-string pdf-occur-search-string)
+                (occur-search-string pdf-occur-search-string)
                 (link (concat
                        "pdftools:"
                        paths
                        "@@"
-                       search-string)))
-           (if (fboundp #'org-link-store-props)
-               (org-link-store-props
+                       occur-search-string)))
+           (org-link-store-props
                 :type "pdftools"
-                :link (org-pdftools-get-link)
-                :description desc)
-             (org-store-link-props
-              :type "pdftools"
-              :link (org-pdftools-get-link)
-              :description desc))))))
+                :link link
+                :description (concat "Search: " occur-search-string))))))
 
 (defun org-pdftools-export (link description format)
   "Export the pdfview LINK with DESCRIPTION for FORMAT from Org files."
