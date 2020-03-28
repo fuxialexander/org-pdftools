@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/fuxialexander/org-pdftools
 ;; Version: 1.0
 ;; Keywords: convenience
-;; Package-Requires: ((emacs "26.1") (org "9.4") (pdf-tools "0.8") (org-noter "1.4.1"))
+;; Package-Requires: ((emacs "26.1") (org "9.3.6") (pdf-tools "0.8") (org-noter "1.4.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -32,7 +32,6 @@
 (require 'subr-x)
 (require 'cl-lib)
 (require 'org)
-(require 'org-refile)
 (require 'org-noter)
 (require 'pdf-tools)
 (require 'pdf-view)
