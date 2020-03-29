@@ -6,7 +6,8 @@ This project was inspired by and built upon ~org-pdfview~ from @markus1189.
 
 #+BEGIN_SRC elisp
 (use-package org-pdftools
-  :config (setq org-pdftools-root-dir /path/you/store/pdfs)
+  :config (setq org-pdftools-root-dir /path/you/store/pdfs
+                org-pdftools-search-string-separator "??")
   (with-eval-after-load 'org
     (org-link-set-parameters "pdftools"
                              :follow #'org-pdftools-open
@@ -33,7 +34,7 @@ The provided function includes:
   corresponding annotation id is stored in the link.
 
 * Integration with ~org-noter~
-Checkout https://github.com/fuxialexander/org-noter/tree/pdf-notes-booster
+You can use the vanilla ~org-noter~ now.
 
 - [X] Integrate with ~org-noter~, such that ~org-noter~ can remember the precise
   location (in the resolution of the exact annotation).
@@ -45,7 +46,32 @@ Checkout https://github.com/fuxialexander/org-noter/tree/pdf-notes-booster
   org-note. (Besides the note content, each annotate will record the IDs of the
   corresponding org heading and potentially even it's parent org heading, such
   that tree-rebuild is possible.)
- 
+
+My config in ~doom-emacs~:
+
+#+BEGIN_SRC elisp
+(use-package! org-noter
+  :commands (org-noter)
+  :config
+  (require 'org-noter-pdftools)
+  (after! pdf-tools
+    (setq pdf-annot-activate-handler-functions #'org-noter-jump-to-note))
+  (setq org-noter-notes-mode-map (make-sparse-keymap)))
+
+(use-package! org-pdftools
+  :init (setq org-pdftools-search-string-separator "??")
+  :config
+  (after! org
+    (org-link-set-parameters "pdftools"
+                             :follow #'org-pdftools-open
+                             :complete #'org-pdftools-complete-link
+                             :store #'org-pdftools-store-link
+                             :export #'org-pdftools-export)
+    (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
+#+END_SRC
+
+*If you are not using ~doom-emacs~, simply change ~use-package!~ to ~use-package~ and ~after!~ to ~with-eval-after-load~.*
+
 * Planed features
 This is the first step of a set of overhauls of Emacs PDF notetaking experience.
 The features below are planned (either in this package or as PR to other
