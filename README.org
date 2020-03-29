@@ -70,7 +70,7 @@ My config in ~doom-emacs~:
     (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
 #+END_SRC
 
-*If you are not using ~doom-emacs~, simply change ~use-package!~ to ~use-package~ and ~after!~ to ~with-eval-after-load~.*
+If you are not using ~doom-emacs~, simply change ~use-package!~ to ~use-package~ and ~after!~ to ~with-eval-after-load~.
 
 * Planed features
 This is the first step of a set of overhauls of Emacs PDF notetaking experience.
