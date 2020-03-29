@@ -38,6 +38,10 @@
 (require 'pdf-annot)
 (require 'pdf-occur)
 
+(defgroup org-pdftools nil
+  "Tools for adding pdftools link support in Org mode."
+  :group 'tools)
+
 (defcustom org-pdftools-root-dir org-directory
   "Root directory for document."
   :group 'org-pdftools
