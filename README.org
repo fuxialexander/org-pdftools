@@ -58,7 +58,7 @@ My config in ~doom-emacs~:
   :config
   (require 'org-noter-pdftools)
   (after! pdf-tools
-    (setq pdf-annot-activate-handler-functions #'org-noter-jump-to-note))
+    (setq pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note))
   (setq org-noter-notes-mode-map (make-sparse-keymap)))
 
 (use-package! org-pdftools
