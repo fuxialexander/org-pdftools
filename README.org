@@ -4,7 +4,7 @@ This project was inspired by and built upon ~org-pdfview~ from @markus1189.
 * Installation
 
 You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
-
+[[https://melpa.org/#/org-pdftools][file:https://melpa.org/packages/org-pdftools-badge.svg]]
 * Usage
 
 #+BEGIN_SRC elisp
