@@ -621,7 +621,7 @@ Only available with PDF Tools."
            (outline-hide-subtree)
            (org-show-children 2)))))
 
-    (t (error "This command is only supported on PDF Tools.")))))
+    (t (error "This command is only supported on PDF Tools")))))
 
 
 (defun org-noter-pdftools-get-path (note-path pdf-path)
