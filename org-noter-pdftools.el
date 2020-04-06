@@ -101,7 +101,9 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
   "Check whether LOCATION is a org-pdftools link."
   (and location
        (stringp location)
-       (string-prefix-p "pdftools:" location)))
+       (or
+        (string-prefix-p "[[pdftools:" location)
+        (string-prefix-p "pdftools:" location))))
 
 (defun org-noter-pdftools--location-cons-to-link (location)
   "Convert LOCATION cons to link."
@@ -134,7 +136,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
   (when (org-noter-pdftools--location-link-p property)
     (let ((link-regexp (concat "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;"
                                (regexp-quote org-pdftools-search-string-separator)
-                               "\\)?\\(.*\\)?")))
+                               "\\)?\\(.*\\)?\\(]]\\)?")))
       (string-match link-regexp property)
       (let ((path (match-string 1 property))
             (page (match-string 2 property))
@@ -157,7 +159,9 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
   (let ((loc (if (org-noter-pdftools--location-p location)
                  location
                (org-noter-pdftools--parse-link location))))
-    (org-noter-pdftools--location-original-property loc)))
+    (concat "[["
+            (org-noter-pdftools--location-original-property loc)
+            "]]")))
 
 (defun org-noter-pdftools--convert-to-location-cons (location)
   "Function for converting the LOCATION link to cons."
@@ -294,12 +298,14 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
                nil
                org-noter-property-note-location
                (concat
+                "[["
                 "pdftools:"
                 path
                 (org-noter-pdftools--location-cons-to-link
                  location)
                 ";;"
-                annot-id))
+                annot-id
+                "]]"))
               (when org-noter-pdftools-use-org-id
                 (org-entry-put
                  nil
