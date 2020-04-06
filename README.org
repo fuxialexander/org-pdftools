@@ -3,15 +3,16 @@
 This project was inspired by and built upon ~org-pdfview~ from @markus1189.
 * Installation
 
-You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
+You can now install ~org-pdftools~ from MELPA! I'll soon add ~org-noter-pdftools~ to MELPA.
 [[https://melpa.org/#/org-pdftools][file:https://melpa.org/packages/org-pdftools-badge.svg]]
 * Usage
 
 #+BEGIN_SRC elisp
 (use-package org-pdftools
-  :config (setq org-pdftools-root-dir /path/you/store/pdfs
+  :init (setq org-pdftools-root-dir /path/you/store/pdfs
                 org-pdftools-search-string-separator "??")
-  (with-eval-after-load 'org
+  :after org
+  :config
     (org-link-set-parameters "pdftools"
                              :follow #'org-pdftools-open
                              :complete #'org-pdftools-complete-link
@@ -20,7 +21,7 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
     (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
 
 (use-package org-noter-pdftools
-  :after (org-noter))
+  :after org-noter)
 #+END_SRC
 
 * Current features
