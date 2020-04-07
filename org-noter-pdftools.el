@@ -227,8 +227,10 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
 
 (defun org-noter-pdftools--insert-heading ()
   "Insert heading in the `org-noter' org document."
-  (let ((location-property (org-entry-get nil org-noter-property-note-location)))
+  (let* ((location-property (org-entry-get nil org-noter-property-note-location)))
     (when location-property
+      (if (string-suffix-p "]]" location-property)
+          (setq location-property (substring location-property 0 -2)))
       (when (string-match ".*;;\\(.*\\)" location-property)
         (org-noter--with-valid-session
          (let ((id (match-string 1 location-property)))
@@ -495,12 +497,12 @@ Only available with PDF Tools."
                       (top (nth 1 edges))
                       (item-subject (alist-get 'subject item))
                       (item-contents (alist-get 'contents item))
-                      name contents pdftools-link id path)
+                      (id (symbol-name (alist-get 'id item)))
+                      name contents pdftools-link path)
                  (when org-noter-pdftools-use-pdftools-link-location
                    (setq path (org-noter-pdftools-get-path
                                (org-noter--session-notes-file-path session)
                                (org-noter--session-property-text session)))
-                   (setq id (symbol-name (alist-get 'id item)))
                    (setq pdftools-link (concat "pdftools:" path "::"
                                                (number-to-string page) "++"
                                                (number-to-string top) ";;"
