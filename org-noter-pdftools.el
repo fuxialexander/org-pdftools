@@ -29,8 +29,9 @@
 (require 'org-id)
 (require 'org-pdftools)
 (require 'org-noter)
+(require 'image-tools)
 
-(declare-function pdf-info-editannots "ext:pdf-info")
+(declare-function pdf-info-editannot "ext:pdf-info")
 (declare-function pdf-annot-add-text-annotation "ext:pdf-annot")
 (declare-function pdf-annot-get-id "ext:pdf-annot")
 
@@ -76,15 +77,13 @@ Can be one of highlight/underline/strikeout/squiggly."
   :type 'boolean)
 
 (defcustom org-noter-pdftools-export-to-pdf t
-  "When non-nil, PDF annotation contents will include both org-id of original notes and org-id of its parent.
-
+  "TODO: Whether you want to export the org notes to pdf annotation contents.
 To use this, `org-noter-pdftools-use-org-id' has to be t."
   :group 'org-noter
   :type 'boolean)
 
 (defcustom org-noter-pdftools-export-to-pdf-with-structure t
-  "When non-nil, PDF annotation contents will include both org-id of original notes and org-id of its parent.
-
+  "TODO: Whether you want to export the org notes to pdf annotation contents.
 To use this, `org-noter-pdftools-use-org-id' has to be t."
   :group 'org-noter
   :type 'boolean)
