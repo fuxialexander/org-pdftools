@@ -3,8 +3,12 @@
 This project was inspired by and built upon ~org-pdfview~ from @markus1189.
 * Installation
 
-You can now install ~org-pdftools~ from MELPA! I'll soon add ~org-noter-pdftools~ to MELPA.
+You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
+
 [[https://melpa.org/#/org-pdftools][file:https://melpa.org/packages/org-pdftools-badge.svg]]
+
+[[https://melpa.org/#/org-pdftools][file:https://melpa.org/packages/org-noter-pdftools-badge.svg]]
+
 * Usage
 
 #+BEGIN_SRC elisp
@@ -80,7 +84,9 @@ If you are not using ~doom-emacs~, simply change ~use-package!~ to ~use-package~
 This is the first step of a set of overhauls of Emacs PDF notetaking experience.
 The features below are planned (either in this package or as PR to other
 packages):
-- [ ] Optionally grab image/text excerpt from the PDF and insert below the
+- [-] Optionally grab image/text excerpt from the PDF and insert below the
   corresponding org-heading.
+  Please refer to ~pdf-view-extract-region-image~, not sure what's the best way
+  to integrate it.
 - [ ] Link export with image/text-based excerpt from the PDF.
 - [ ] (Long-term) Org <-> PDF Annotation converter.
