@@ -19,7 +19,7 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program. If not, see <http://www.gnu.org/licenses/>.
+;; along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;; Add integration between org-pdftools and org-noter.
@@ -29,7 +29,7 @@
 (require 'org-id)
 (require 'org-pdftools)
 (require 'org-noter)
-(require 'image-tools)
+(require 'image-mode)
 
 (declare-function pdf-info-editannot "ext:pdf-info")
 (declare-function pdf-annot-add-text-annotation "ext:pdf-annot")
@@ -374,7 +374,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
                     (org-noter--get-doc-window)
                   (pdf-annot-read-annotation
                    "Left click the annotation "))))
-  (when (not org-noter-pdftools-use-org-id)
+  (unless org-noter-pdftools-use-org-id
     "You have to enable `org-noter-pdftools-use-org-id'!")
   (org-noter--with-valid-session
    (pdf-annot-show-annotation a t)
