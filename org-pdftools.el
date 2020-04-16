@@ -373,6 +373,18 @@ and append it. ARG is passed to `org-link-complete-file'."
     "1")))
 
 
+;;;###autoload
+(defun org-pdftools-setup-link (&optional protcol)
+  "Set up pdftools: links in org-mode."
+  (setq org-pfdtools-protocol (or protocol org-pfdtools-protocol))
+  (org-link-set-parameters org-pfdtools-protocol
+                           :follow #'org-pdftools-open
+                           :complete #'org-pdftools-complete-link
+                           :store #'org-pdftools-store-link
+                           :export #'org-pdftools-export)
+  (add-hook 'org-store-link-functions #'org-pdftools-store-link))
+
+
 (defun org-pdftools-get-path (rel-path)
   "Get full path from REL-PATH."
   (let* ((fullpath (expand-file-name rel-path org-pdftools-root-dir))
