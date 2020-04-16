@@ -85,6 +85,11 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'float)
 
+(defcustom org-pdftools-protocol "pdftools"
+  "The link and link type to use for pdftools links."
+  :group 'org-pdftools
+  :type 'string)
+
 
 ;; pdftools://path::page++height_percent;;annot_id$$isearch_string or @@occur_search_string
 (defun org-pdftools-open-pdftools (link)
@@ -275,7 +280,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                             isearch-string
                           ""))
          (link (concat
-                "pdftools:"
+                org-pdftools-protocol ":"
                 path
                 "::"
                 (number-to-string page)
@@ -310,7 +315,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                            (pdf-view-active-region-text)
                            ? )))))
          (org-link-store-props
-                :type "pdftools"
+                :type org-pdftools-protocol
                 :link (org-pdftools-get-link)
                 :description desc)))
         ((eq major-mode
@@ -323,12 +328,12 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                         "%&%"))
                 (occur-search-string pdf-occur-search-string)
                 (link (concat
-                       "pdftools:"
+                       org-pdftools-protocol ":"
                        paths
                        "@@"
                        occur-search-string)))
            (org-link-store-props
-                :type "pdftools"
+                :type org-pdftools-protocol
                 :link link
                 :description (concat "Search: " occur-search-string))))))
 
@@ -365,7 +370,7 @@ and append it. ARG is passed to `org-link-complete-file'."
   (concat
    (replace-regexp-in-string
     "^file:"
-    "pdftools:"
+    (concat org-pdftools-protocol ":")
     (org-link-complete-file arg))
    "::"
    (read-from-minibuffer
