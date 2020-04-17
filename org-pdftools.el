@@ -363,6 +363,16 @@ Can be one of highlight/underline/strikeout/squiggly."
             (t path)))))
 
 ;;;###autoload
+(defun org-pdftools-setup-link (&optional prefix)
+  "Set up pdf: links in org-mode."
+  (setq org-pdftools-prefix (or prefix org-pdftools-link-prefix))
+  (org-link-set-parameters org-pdftools-prefix
+                           :follow #'org-pdftools-open
+                           :complete #'org-pdftools-complete-link
+                           :store #'org-pdftools-store-link
+                           :export #'org-pdftools-export))
+
+;;;###autoload
 (defun org-pdftools-complete-link (&optional arg)
   "Use the existing file name completion for file.
 Links to get the file name, then ask the user for the page number
