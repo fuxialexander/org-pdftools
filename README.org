@@ -13,16 +13,13 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
 
 #+BEGIN_SRC elisp
 (use-package org-pdftools
-  :init (setq org-pdftools-root-dir /path/you/store/pdfs
-                org-pdftools-search-string-separator "??")
   :after org
   :config
-    (org-link-set-parameters "pdftools"
-                             :follow #'org-pdftools-open
-                             :complete #'org-pdftools-complete-link
-                             :store #'org-pdftools-store-link
-                             :export #'org-pdftools-export)
-    (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
+  (org-link-set-parameters "pdftools"
+                           :follow #'org-pdftools-open
+                           :complete #'org-pdftools-complete-link
+                           :store #'org-pdftools-store-link
+                           :export #'org-pdftools-export))
 
 (use-package org-noter-pdftools
   :after org-noter)
@@ -54,31 +51,6 @@ You can use the vanilla ~org-noter~ now.
   org-note. (Besides the note content, each annotate will record the IDs of the
   corresponding org heading and potentially even it's parent org heading, such
   that tree-rebuild is possible.)
-
-My config in ~doom-emacs~:
-
-#+BEGIN_SRC elisp
-(use-package! org-noter
-  :commands (org-noter)
-  :config
-  (require 'org-noter-pdftools)
-  (after! pdf-tools
-    (setq pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note))
-  (setq org-noter-notes-mode-map (make-sparse-keymap)))
-
-(use-package! org-pdftools
-  :init (setq org-pdftools-search-string-separator "??")
-  :config
-  (after! org
-    (org-link-set-parameters "pdftools"
-                             :follow #'org-pdftools-open
-                             :complete #'org-pdftools-complete-link
-                             :store #'org-pdftools-store-link
-                             :export #'org-pdftools-export)
-    (add-hook 'org-store-link-functions 'org-pdftools-store-link)))
-#+END_SRC
-
-If you are not using ~doom-emacs~, simply change ~use-package!~ to ~use-package~ and ~after!~ to ~with-eval-after-load~.
 
 * Planed features
 This is the first step of a set of overhauls of Emacs PDF notetaking experience.

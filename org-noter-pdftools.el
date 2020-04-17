@@ -101,8 +101,12 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
   (and location
        (stringp location)
        (or
-        (string-prefix-p "[[pdftools:" location)
-        (string-prefix-p "pdftools:" location))))
+        (string-prefix-p
+         (concat "[[" org-pdftools-link-prefix ":")
+         location)
+        (string-prefix-p
+         (concat org-pdftools-link-prefix ":")
+         location))))
 
 (defun org-noter-pdftools--location-cons-to-link (location)
   "Convert LOCATION cons to link."
@@ -135,7 +139,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
   (when (org-noter-pdftools--location-link-p property)
     (let ((link-regexp (concat "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;"
                                (regexp-quote org-pdftools-search-string-separator)
-                               "\\)?\\(.*\\)?\\(]]\\)?")))
+                               "\\)?\\(.*\\)?")))
       (string-match link-regexp property)
       (let ((path (match-string 1 property))
             (page (match-string 2 property))
@@ -206,7 +210,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
           (org-pdftools-markup-pointer-color org-noter-pdftools-markup-pointer-color)
           (org-pdftools-markup-pointer-opacity org-noter-pdftools-markup-pointer-opacity)
           (org-pdftools-markup-pointer-function org-noter-pdftools-markup-pointer-function))
-      (org-noter-pdftools--parse-link (org-pdftools-get-link t)))))
+      (org-noter-pdftools--parse-link (org-pdftools-get-link)))))
 
 (defun org-noter-pdftools--doc-approx-location (mode precise-info force-new-ref)
   "Get approximate location in MODE buffer based on PRECISE-INFO and FORCE-NEW-REF."
@@ -214,7 +218,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
    (when (eq mode 'pdf-view-mode)
      (cond ((or (numberp precise-info) (not precise-info))
             (org-noter-pdftools--parse-link
-             (concat "pdftools:" (expand-file-name (org-noter--session-property-text session)) "::"
+             (concat org-pdftools-link-prefix ":" (expand-file-name (org-noter--session-property-text session)) "::"
                      (number-to-string (image-mode-window-get 'page))
                      (when precise-info (concat "++" (number-to-string precise-info))))))
            ((org-noter-pdftools--location-p precise-info) precise-info)
@@ -300,7 +304,8 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
                org-noter-property-note-location
                (concat
                 "[["
-                "pdftools:"
+                org-pdftools-link-prefix
+                ":"
                 path
                 (org-noter-pdftools--location-cons-to-link
                  location)
@@ -362,7 +367,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
                   org-noter-property-note-location)))
        (if (and prop
                 (not (string-prefix-p
-                      "pdftools:"
+                      org-pdftools-link-prefix ":"
                       prop)))
            (call-interactively
             #'org-noter-pdftools-convert-old-org-heading))))))
@@ -433,7 +438,7 @@ Only available with PDF Tools."
                    (if title
                        (setq pdftools-link
                              (concat
-                              "pdftools:"
+                              org-pdftools-link-prefix ":"
                               path
                               "::"
                               (number-to-string page)
@@ -446,7 +451,7 @@ Only available with PDF Tools."
                                title)))
                      (setq pdftools-link
                            (concat
-                            "pdftools:"
+                            org-pdftools-link-prefix ":"
                             path
                             "::"
                             (number-to-string page)
@@ -502,7 +507,7 @@ Only available with PDF Tools."
                    (setq path (org-noter-pdftools-get-path
                                (org-noter--session-notes-file-path session)
                                (org-noter--session-property-text session)))
-                   (setq pdftools-link (concat "pdftools:" path "::"
+                   (setq pdftools-link (concat org-pdftools-link-prefix ":" path "::"
                                                (number-to-string page) "++"
                                                (number-to-string top) ";;"
                                                id)))
@@ -545,7 +550,7 @@ Only available with PDF Tools."
                                (org-noter-pdftools-get-path
                                 (org-noter--session-notes-file-path session)
                                 (org-noter--session-property-text session)))
-                         (setq pdftools-link (concat "pdftools:" path "::"
+                         (setq pdftools-link (concat org-pdftools-link-prefix ":" path "::"
                                                      (number-to-string page) "++"
                                                      (number-to-string top))))
                        (unless (and title (> (length title) 0)) (setq title (pdf-info-gettext page edges)))

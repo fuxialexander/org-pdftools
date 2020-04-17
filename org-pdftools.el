@@ -32,7 +32,7 @@
 (require 'cl-lib)
 (require 'org)
 (require 'org-refile nil t)
-(require 'org-noter)
+;; (require 'org-noter)
 (require 'pdf-tools)
 (require 'pdf-view)
 (require 'pdf-annot)
@@ -42,10 +42,15 @@
   "Tools for adding pdftools link support in Org mode."
   :group 'tools)
 
-(defcustom org-pdftools-root-dir org-directory
-  "Root directory for document."
+(defcustom org-pdftools-path-generator #'abbreviate-file-name
+"Translate your PDF file path the way you like. Take buffer-file-name as the argument."
   :group 'org-pdftools
-  :type 'directory)
+  :type 'function)
+
+(defcustom org-pdftools-path-resolver #'expand-file-name
+"Resolve your translated PDF file path back to an absolute path."
+  :group 'org-pdftools
+  :type 'function)
 
 (defcustom org-pdftools-open-custom-open nil
   "Custom function to open linked pdf files."
@@ -72,7 +77,11 @@ Can be one of highlight/underline/strikeout/squiggly."
   "Color for free pointer annotations. Refer to `pdf-annot-standard-text-icons`."
   :group 'org-pdftools
   :type 'string)
-(defcustom org-pdftools-search-string-separator "$$"
+(defcustom org-pdftools-link-prefix "pdf"
+  "Prefix for org-pdftools link"
+  :group 'org-pdftools
+  :type 'string)
+(defcustom org-pdftools-search-string-separator "??"
   "Separator of search-string."
   :group 'org-pdftools
   :type 'string)
@@ -118,17 +127,15 @@ Can be one of highlight/underline/strikeout/squiggly."
                    (org-noter--with-valid-session
                     (let ((doc (with-selected-window
                                    (org-noter--get-doc-window)
-                                 (buffer-file-name)))
-                          (fullpath (expand-file-name
-                                     path
-                                     org-pdftools-root-dir)))
+                                 buffer-file-name))
+                          (fullpath (funcall org-pdftools-path-resolver path)))
                       (if (string-equal doc fullpath)
                           (select-window
                            (org-noter--get-doc-window))
                         (let ((org-link-frame-setup
                                (cl-acons 'file 'find-file-other-frame org-link-frame-setup)))
-                          (org-open-file path 1)))))
-                 (org-open-file path 1)))
+                          (org-open-file fullpath 1)))))
+                 (org-open-file (funcall org-pdftools-path-resolver path) 1)))
              (if (and page
                       (not (string-empty-p page)))
                  (progn
@@ -200,22 +207,17 @@ Can be one of highlight/underline/strikeout/squiggly."
       (org-pdftools-open-pdftools
        link)
     (if (bound-and-true-p org-pdftools-open-custom-open)
-        (funcall
-         org-pdftools-open-custom-open
-         link)
+        (funcall org-pdftools-open-custom-open link)
       (let* ((path (when (string-match
-                          "\\(.+\\)::.+"
-                          link)
+                          "\\(.+\\)::.+" link)
                      (match-string 1 link))))
         (org-open-file path)))))
 
-(defun org-pdftools-get-link (&optional from-org-noter)
-  "Get link from the active pdf buffer.
-Integrate with `org-noter' when FROM-ORG-NOTER."
-  (let* ((path (org-pdftools-get-path
-                (file-relative-name
-                 buffer-file-name
-                 org-pdftools-root-dir)))
+(defun org-pdftools-get-link ()
+  "Get link from the active pdf buffer."
+  (let* ((path
+          (with-current-buffer (current-buffer)
+              (funcall org-pdftools-path-generator (buffer-file-name))))
          (page (pdf-view-current-page))
          (annot-id (if (pdf-view-active-region-p)
                        (pdf-annot-get-id
@@ -224,7 +226,7 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                          (pdf-view-active-region t)
                          org-pdftools-markup-pointer-color
                          `((opacity . ,org-pdftools-markup-pointer-opacity))))
-                     (if (and (not from-org-noter)
+                     (if (and (not (bound-and-true-p org-noter--session))
                               (pdf-annot-getannots page))
                          (condition-case nil
                              (pdf-annot-get-id
@@ -268,14 +270,15 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                           (frame-char-height))
                          (float
                           (cdr (pdf-view-image-size)))))))
-         ;; pdftools://path::page++height_percent;;annot_id\\|??search-string
+         ;; pdf://path::page++height_percent;;annot_id\\|??search-string
          (search-string (if (and (not annot-id)
                                  (y-or-n-p
                                   "Do you want to add a isearch link? "))
                             isearch-string
                           ""))
          (link (concat
-                "pdftools:"
+
+                org-pdftools-link-prefix ":"
                 path
                 "::"
                 (number-to-string page)
@@ -309,10 +312,10 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                            'identity
                            (pdf-view-active-region-text)
                            ? )))))
-         (org-link-store-props
-                :type "pdftools"
-                :link (org-pdftools-get-link)
-                :description desc)))
+           (org-link-store-props
+            :type org-pdftools-link-prefix
+            :link (org-pdftools-get-link)
+            :description desc)))
         ((eq major-mode
              'pdf-occur-buffer-mode)
          (let* ((paths (mapconcat
@@ -323,14 +326,15 @@ Integrate with `org-noter' when FROM-ORG-NOTER."
                         "%&%"))
                 (occur-search-string pdf-occur-search-string)
                 (link (concat
-                       "pdftools:"
+                       org-pdftools-link-prefix
+                       ":"
                        paths
                        "@@"
                        occur-search-string)))
            (org-link-store-props
-                :type "pdftools"
-                :link link
-                :description (concat "Search: " occur-search-string))))))
+            :type org-pdftools-link-prefix
+            :link link
+            :description (concat "Search: " occur-search-string))))))
 
 (defun org-pdftools-export (link description format)
   "Export the pdfview LINK with DESCRIPTION for FORMAT from Org files."
@@ -365,21 +369,12 @@ and append it. ARG is passed to `org-link-complete-file'."
   (concat
    (replace-regexp-in-string
     "^file:"
-    "pdftools:"
+    org-pdftools-link-prefix ":"
     (org-link-complete-file arg))
    "::"
    (read-from-minibuffer
     "Page:"
     "1")))
-
-
-(defun org-pdftools-get-path (rel-path)
-  "Get full path from REL-PATH."
-  (let* ((fullpath (expand-file-name rel-path org-pdftools-root-dir))
-         (rel-home-path (file-relative-name fullpath (getenv "HOME"))))
-    (if (string-suffix-p ".." rel-home-path)
-        fullpath
-      (concat "~/" rel-home-path))))
 
 (provide 'org-pdftools)
 ;;; org-pdftools.el ends here
