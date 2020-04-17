@@ -19,6 +19,23 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
   :after org-noter)
 #+END_SRC
 
+* Latest release note
+- The prefix of pdftools link can now be customized using
+`org-pdftools-link-prefix`, and the default is now set to "pdf"
+- The `org-pdftools-search-string-separator` is now set to "??" to avoid
+org fontification problem
+- You can now specify how the path of pdf is stored using two function:
+  - `org-pdftools-path-generator` takes `buffer-file-name` as an
+  argument, and output a translated path. Default to `abbreviate-file-name`
+  - `org-pdftools-path-resolver` takes a translated path as an argument
+  and translate it back to absolute path. Default to `expand-file-name`
+- The basic function of org-noter-pdftools should now works with out
+problems. These includes:
+  - Insert note
+  - Create skeleton
+  - Sync scrolling
+- README fixes
+
 * Current features
 The provided function includes:
 - [X] (Sort-of) backward compatibility with org-pdfview: simply change the link prefix from
