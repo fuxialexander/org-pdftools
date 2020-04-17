@@ -41,6 +41,11 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-noter
   :type 'function)
 
+(defcustom org-noter-pdftools-path-generator #'abbreviate-file-name
+"Translate your PDF file path the way you like. Take buffer-file-name as the argument."
+  :group 'org-pdftools
+  :type 'function)
+
 (defcustom org-noter-pdftools-markup-pointer-color "#A9A9A9"
   "Color for markup pointer annotations."
   :group 'org-noter
@@ -432,9 +437,8 @@ Only available with PDF Tools."
                (when (and (eq type 'goto-dest)
                           (> page 0))
                  (when org-noter-pdftools-use-pdftools-link-location
-                   (setq path (org-noter-pdftools-get-path
-                                (org-noter--session-notes-file-path session)
-                                (org-noter--session-property-text session)))
+                   (setq path
+                         (funcall org-noter-pdftools-path-generator (buffer-file-name)))
                    (if title
                        (setq pdftools-link
                              (concat
@@ -504,9 +508,7 @@ Only available with PDF Tools."
                       (id (symbol-name (alist-get 'id item)))
                       name contents pdftools-link path)
                  (when org-noter-pdftools-use-pdftools-link-location
-                   (setq path (org-noter-pdftools-get-path
-                               (org-noter--session-notes-file-path session)
-                               (org-noter--session-property-text session)))
+                   (setq path (funcall org-noter-pdftool-link-generator (buffer-file-name)))
                    (setq pdftools-link (concat org-pdftools-link-prefix ":" path "::"
                                                (number-to-string page) "++"
                                                (number-to-string top) ";;"
@@ -547,9 +549,7 @@ Only available with PDF Tools."
                             target heading-text pdftools-link path)
                        (when org-noter-pdftools-use-pdftools-link-location
                          (setq path
-                               (org-noter-pdftools-get-path
-                                (org-noter--session-notes-file-path session)
-                                (org-noter--session-property-text session)))
+                               (funcall org-noter-pdftool-link-generator (buffer-file-name)))
                          (setq pdftools-link (concat org-pdftools-link-prefix ":" path "::"
                                                      (number-to-string page) "++"
                                                      (number-to-string top))))
@@ -628,16 +628,6 @@ Only available with PDF Tools."
            (org-show-children 2)))))
 
     (t (error "This command is only supported on PDF Tools")))))
-
-
-(defun org-noter-pdftools-get-path (note-path pdf-path)
-  "Get the right path start with $HOME replaced by `~' based on NOTE-PATH and PDF-PATH."
-  (let* ((fullpath (expand-file-name
-                    (concat (file-name-directory note-path) pdf-path)))
-         (relative-home-path (file-relative-name fullpath (getenv "HOME"))))
-    (if (string-suffix-p ".." relative-home-path)
-        fullpath
-      (concat "~/" relative-home-path))))
 
 
 (provide 'org-noter-pdftools)
