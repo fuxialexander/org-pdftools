@@ -197,7 +197,8 @@ Can be one of highlight/underline/strikeout/squiggly."
                   (pathlist (split-string paths "%&%")))
              (pdf-occur-search
               pathlist
-              occur-search-string))))))
+              occur-search-string)))
+          ((org-open-file link 1)))))
 
 ;;;###autoload
 (defun org-pdftools-open (link)
