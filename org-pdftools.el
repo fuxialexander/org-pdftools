@@ -57,7 +57,10 @@
   :group 'org-pdftools
   :type '(choice function nil))
 (defcustom org-pdftools-export-style 'pdftools
-  "Export style of org-pdftools links."
+  "Export style of org-pdftools links.
+- pdftools :: export the link as is
+- protocol :: export the link as a org-protocal link such that it could open pdf-tools when clicked
+"
   :group 'org-pdftools
   :type 'symbol)
 (defcustom org-pdftools-markup-pointer-function 'pdf-annot-add-underline-markup-annotation

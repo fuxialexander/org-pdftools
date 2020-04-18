@@ -16,10 +16,16 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
   :hook (org-load . org-pdftools-setup-link))
 
 (use-package org-noter-pdftools
-  :after org-noter)
+  :after org-noter
+  :config
+  (with-eval-after-load 'pdf-annot
+    (add-hook pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
 #+END_SRC
 
 * Latest release note
+- /Added ~org-noter-pdftools-embed-org-note-to-pdf~, ~org-noter-pdftools-embed-all-org-note-to-pdf~ to copy one or all *org-noter annotation headings* (the ones with a ~annot-id~ and ~org-pdftools link~) to the corresponding PDF file./
+- /Added ~org-noter-pdftools-embed-org-buffer-to-pdf~ to copy the whole *org-noter* buffer to a annotation in the left upper corner of the first page in the PDF./
+- /Added ~org-noter-pdftools-jump-to-note~ config in the README./
 - The prefix of pdftools link can now be customized using
 ~org-pdftools-link-prefix~, and the default is now set to "pdf"
 - The ~org-pdftools-search-string-separator~ is now set to "??" to avoid
