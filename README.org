@@ -23,24 +23,16 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
 #+END_SRC
 
 * Latest release note
-- /Added ~org-noter-pdftools-embed-org-note-to-pdf~, ~org-noter-pdftools-embed-all-org-note-to-pdf~ to copy one or all *org-noter annotation headings* (the ones with a ~annot-id~ and ~org-pdftools link~) to the corresponding PDF file./
-- /Added ~org-noter-pdftools-embed-org-buffer-to-pdf~ to copy the whole *org-noter* buffer to a annotation in the left upper corner of the first page in the PDF./
-- /Added ~org-noter-pdftools-jump-to-note~ config in the README./
-- The prefix of pdftools link can now be customized using
-~org-pdftools-link-prefix~, and the default is now set to "pdf"
-- The ~org-pdftools-search-string-separator~ is now set to "??" to avoid
-org fontification problem
+- HTML exported link now have a "#page=n" postfix, which should make browsers like Chrome open the corresponding page.
+- You can now customize the link description format using ~org-pdftools-get-desc-function~
+- Added ~org-noter-pdftools-embed-org-note-to-pdf~, ~org-noter-pdftools-embed-all-org-note-to-pdf~ to copy one or all *org-noter annotation headings* (the ones with a ~annot-id~ and ~org-pdftools link~) to the corresponding PDF file.
+- Added ~org-noter-pdftools-embed-org-buffer-to-pdf~ to copy the whole *org-noter* buffer to a annotation in the left upper corner of the first page in the PDF.
+- Added ~org-noter-pdftools-jump-to-note~ config in the README.
+- The prefix of pdftools link can now be customized using ~org-pdftools-link-prefix~, and the default is now set to "pdf"
+- The ~org-pdftools-search-string-separator~ is now set to ~??~ to avoid org fontification problem
 - You can now specify how the path of pdf is stored using two function:
-  - ~org-pdftools-path-generator~ takes ~buffer-file-name~ as an
-  argument, and output a translated path. Default to ~abbreviate-file-name~
-  - ~org-pdftools-path-resolver~ takes a translated path as an argument
-  and translate it back to absolute path. Default to ~expand-file-name~
-- The basic function of org-noter-pdftools should now works with out
-problems. These includes:
-  - Insert note
-  - Create skeleton
-  - Sync scrolling
-- README fixes
+  - ~org-pdftools-path-generator~ takes ~buffer-file-name~ as an argument, and output a translated path. Default to ~abbreviate-file-name~
+  - ~org-pdftools-path-resolver~ takes a translated path as an argument and translate it back to absolute path. Default to ~expand-file-name~
 
 * Current features
 The provided function includes:

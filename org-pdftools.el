@@ -42,16 +42,23 @@
   "Tools for adding pdftools link support in Org mode."
   :group 'tools)
 
+(defcustom org-pdftools-get-desc-function #'org-pdftools-get-desc-default
+  "A function that takes 3 arguments and output a link description.
+- `file': basename of the PDF file
+- `page': current page number converted to string
+- `text' (should have optional tag): additional text infomation like highlighted text or isearch string.
+See `org-pdftools-get-desc-default' as an example."
+
+  :group 'org-pdftools
+  :type 'function)
 (defcustom org-pdftools-path-generator #'abbreviate-file-name
 "Translate your PDF file path the way you like. Take buffer-file-name as the argument."
   :group 'org-pdftools
   :type 'function)
-
 (defcustom org-pdftools-path-resolver #'expand-file-name
 "Resolve your translated PDF file path back to an absolute path."
   :group 'org-pdftools
   :type 'function)
-
 (defcustom org-pdftools-open-custom-open nil
   "Custom function to open linked pdf files."
   :group 'org-pdftools
@@ -98,7 +105,7 @@ Can be one of highlight/underline/strikeout/squiggly."
   :type 'float)
 
 
-;; pdftools://path::page++height_percent;;annot_id$$isearch_string or @@occur_search_string
+;; pdf://path::page++height_percent;;annot_id??isearch_string or @@occur_search_string
 (defun org-pdftools-open-pdftools (link)
   "Internal function to open org-pdftools LINK."
   (let ((link-regexp
@@ -203,20 +210,6 @@ Can be one of highlight/underline/strikeout/squiggly."
               occur-search-string)))
           ((org-open-file link 1)))))
 
-;;;###autoload
-(defun org-pdftools-open (link)
-  "Function to open org-pdftools LINK."
-  (if (and (display-graphic-p)
-           (featurep 'pdf-tools))
-      (org-pdftools-open-pdftools
-       link)
-    (if (bound-and-true-p org-pdftools-open-custom-open)
-        (funcall org-pdftools-open-custom-open link)
-      (let* ((path (when (string-match
-                          "\\(.+\\)::.+" link)
-                     (match-string 1 link))))
-        (org-open-file path)))))
-
 (defun org-pdftools-get-link ()
   "Get link from the active pdf buffer."
   (let* ((path
@@ -303,67 +296,81 @@ Can be one of highlight/underline/strikeout/squiggly."
                      "   Reminder: You haven't performed a isearch!") "")))))
     link))
 
+(defun org-pdftools-get-desc-default (file page &optional text)
+  (concat file ".pdf: Page " page (when text (concat "; Quoting: " text))))
+
+;;;###autoload
+(defun org-pdftools-open (link)
+  "Function to open org-pdftools LINK."
+  (if (and (display-graphic-p)
+           (featurep 'pdf-tools))
+      (org-pdftools-open-pdftools
+       link)
+    (if (bound-and-true-p org-pdftools-open-custom-open)
+        (funcall org-pdftools-open-custom-open link)
+      (let* ((path (when (string-match
+                          "\\(.+\\)::.+" link)
+                     (match-string 1 link))))
+        (org-open-file path)))))
+
 ;;;###autoload
 (defun org-pdftools-store-link ()
   "Store a link to a pdfview/pdfoccur buffer."
   (cond ((eq major-mode 'pdf-view-mode)
          ;; This buffer is in pdf-view-mode
-         (let ((desc (if (pdf-view-active-region-p)
-                         (replace-regexp-in-string
-                          "\n"
-                          " "
-                          (mapconcat
-                           'identity
-                           (pdf-view-active-region-text)
-                           ? )))))
+         (let* ((file (file-name-base (pdf-view-buffer-file-name)))
+                (quot (if (pdf-view-active-region-p)
+                          (replace-regexp-in-string "\n" " "
+                                                    (mapconcat 'identity (pdf-view-active-region-text) ? ))))
+                (page (number-to-string (pdf-view-current-page)))
+                (link (org-pdftools-get-link))
+                (isearchstr (if (string-match ".*??\\(.*\\)" link)
+                                (match-string 1 link)))
+                (desc (funcall org-pdftools-get-desc-function file page (or quot isearchstr))))
            (org-link-store-props
             :type org-pdftools-link-prefix
-            :link (org-pdftools-get-link)
+            :link link
             :description desc)))
-        ((eq major-mode
-             'pdf-occur-buffer-mode)
-         (let* ((paths (mapconcat
-                        #'identity
-                        (mapcar
-                         #'car
-                         pdf-occur-search-documents)
-                        "%&%"))
+        ((eq major-mode 'pdf-occur-buffer-mode)
+         (let* ((paths (mapconcat #'identity (mapcar #'car
+                         pdf-occur-search-documents) "%&%"))
                 (occur-search-string pdf-occur-search-string)
-                (link (concat
-                       org-pdftools-link-prefix
-                       ":"
-                       paths
-                       "@@"
-                       occur-search-string)))
+                (link (concat org-pdftools-link-prefix ":"
+                       paths "@@" occur-search-string)))
            (org-link-store-props
             :type org-pdftools-link-prefix
             :link link
             :description (concat "Search: " occur-search-string))))))
 
+;;;###autoload
 (defun org-pdftools-export (link description format)
   "Export the pdfview LINK with DESCRIPTION for FORMAT from Org files."
-  (let* ((path (when (string-match
-                      "\\(.+\\)::.+"
-                      link)
-                 (match-string 1 link)))
-         (desc (or description link)))
-    (when (stringp path)
-      (setq path
-            (org-link-escape
-             (expand-file-name path)))
-      (cond ((eq format 'html)
-             (format
-              "<a href=\"%s\">%s</a>"
-              path
-              desc))
-            ((eq format 'latex)
-             (format
-              "\\href{%s}{%s}"
-              path
-              desc))
-            ((eq format 'ascii)
-             (format "%s (%s)" desc path))
-            (t path)))))
+  (let* (path desc loc page)
+    (if (string-match "\\(.+\\)::\\(.*\\)" link)
+        (progn
+          (setq path (match-string 1 link))
+          (setq loc (match-string 2 link))
+          (if (string-match "\\([0-9]+\\)++\\(.*\\)" loc)
+              (setq page (match-string 1 loc))
+            (setq page loc)))
+      (setq path link))
+
+    (setq path (org-link-escape path))
+
+    (cond ((eq format 'html)
+           (format
+            "<a href=\"%s#page=%s\">%s</a>"
+            path
+            page
+            desc))
+          ((eq format 'latex)
+           (format
+            "\\href{%s}{%s}"
+            path
+            desc))
+          ((eq format 'ascii)
+           (format "%s (%s)" desc path))
+          (t path))))
 
 ;;;###autoload
 (defun org-pdftools-setup-link (&optional prefix)
