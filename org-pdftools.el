@@ -390,8 +390,9 @@ and append it. ARG is passed to `org-link-complete-file'."
   (concat
    (replace-regexp-in-string
     "^file:"
+    (concat
     org-pdftools-link-prefix ":"
-    (org-link-complete-file arg))
+    (org-link-complete-file arg)))
    "::"
    (read-from-minibuffer
     "Page:"
