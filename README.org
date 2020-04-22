@@ -19,7 +19,7 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
   :after org-noter
   :config
   (with-eval-after-load 'pdf-annot
-    (setq pdf-annot-activate-handler-functions '(org-noter-pdftools-jump-to-note))))
+    (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
 #+END_SRC
 
 * Latest release note

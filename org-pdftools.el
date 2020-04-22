@@ -324,7 +324,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                                                     (mapconcat 'identity (pdf-view-active-region-text) ? ))))
                 (page (number-to-string (pdf-view-current-page)))
                 (link (org-pdftools-get-link))
-                (isearchstr (if (string-match ".*??\\(.*\\)" link)
+                (isearchstr (if (string-match (concat ".*" (regexp-quote org-pdftools-search-string-separator) "\\(.*\\)") link)
                                 (match-string 1 link)))
                 (desc (funcall org-pdftools-get-desc-function file page (or quot isearchstr))))
            (org-link-store-props
@@ -390,7 +390,7 @@ and append it. ARG is passed to `org-link-complete-file'."
   (concat
    (replace-regexp-in-string
     "^file:"
-    org-pdftools-link-prefix ":"
+    (concat org-pdftools-link-prefix ":")
     (org-link-complete-file arg))
    "::"
    (read-from-minibuffer
