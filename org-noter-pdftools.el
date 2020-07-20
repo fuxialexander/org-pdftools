@@ -497,7 +497,7 @@ Only available with PDF Tools."
                       (id (symbol-name (alist-get 'id item)))
                       name contents pdftools-link path)
                  (when org-noter-pdftools-use-pdftools-link-location
-                   (setq path (funcall org-noter-pdftool-link-generator (buffer-file-name)))
+                   (setq path (funcall org-noter-pdftools-path-generator (buffer-file-name)))
                    (setq pdftools-link (concat org-pdftools-link-prefix ":" path "::"
                                                (number-to-string page) "++"
                                                (number-to-string top) ";;"
@@ -538,7 +538,7 @@ Only available with PDF Tools."
                             target heading-text pdftools-link path)
                        (when org-noter-pdftools-use-pdftools-link-location
                          (setq path
-                               (funcall org-noter-pdftool-link-generator (buffer-file-name)))
+                               (funcall org-noter-pdftools-path-generator (buffer-file-name)))
                          (setq pdftools-link (concat org-pdftools-link-prefix ":" path "::"
                                                      (number-to-string page) "++"
                                                      (number-to-string top))))
