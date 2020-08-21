@@ -355,7 +355,8 @@ Can be one of highlight/underline/strikeout/squiggly."
             (setq page loc)))
       (setq path link))
 
-    (setq path (org-link-escape path))
+    ;; `org-export-file-uri` expands the filename correctly
+    (setq path (org-export-file-uri (org-link-escape path)))
 
     (cond ((eq format 'html)
            (format
