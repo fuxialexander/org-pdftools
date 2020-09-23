@@ -13,7 +13,7 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
 
 #+BEGIN_SRC elisp
 (use-package org-pdftools
-  :hook (org-load . org-pdftools-setup-link))
+  :hook (org-mode . org-pdftools-setup-link))
 
 (use-package org-noter-pdftools
   :after org-noter
