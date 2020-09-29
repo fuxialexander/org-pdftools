@@ -345,7 +345,7 @@ Can be one of highlight/underline/strikeout/squiggly."
 ;;;###autoload
 (defun org-pdftools-export (link description format)
   "Export the pdfview LINK with DESCRIPTION for FORMAT from Org files."
-  (let* (path desc loc page)
+  (let* (path loc page)
     (if (string-match "\\(.+\\)::\\(.*\\)" link)
         (progn
           (setq path (match-string 1 link))
@@ -355,21 +355,22 @@ Can be one of highlight/underline/strikeout/squiggly."
             (setq page loc)))
       (setq path link))
 
-    (setq path (org-link-escape path))
+    ;; `org-export-file-uri` expands the filename correctly
+    (setq path (org-export-file-uri (org-link-escape path)))
 
     (cond ((eq format 'html)
            (format
             "<a href=\"%s#page=%s\">%s</a>"
             path
             page
-            desc))
+            description))
           ((eq format 'latex)
            (format
             "\\href{%s}{%s}"
             path
-            desc))
+            description))
           ((eq format 'ascii)
-           (format "%s (%s)" desc path))
+           (format "%s (%s)" description path))
           (t path))))
 
 ;;;###autoload
