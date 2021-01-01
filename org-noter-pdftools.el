@@ -98,6 +98,11 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
   :group 'org-noter
   :type 'boolean)
 
+(defcustom org-noter-pdftools-insert-content-heading t
+  "When non-nil, insert a \"Content\" heading above the content of an annotation (underline, highlight)"
+  :group 'org-noter
+  :type 'boolean)
+
 (cl-defstruct org-noter-pdftools--location
   path page height annot-id search-string original-property)
 
@@ -604,7 +609,8 @@ Only available with PDF Tools."
                (org-noter--insert-heading level title nil location)
 
                (when (car contents)
-                 (org-noter--insert-heading (1+ level) "Contents")
+                 (when org-noter-pdftools-insert-content-heading
+                    (org-noter--insert-heading (1+ level) "Contents"))
                  (insert (car contents)))
                (when (cdr contents)
                  (org-noter--insert-heading (1+ level) "Comment")
