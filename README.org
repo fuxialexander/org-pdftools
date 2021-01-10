@@ -10,7 +10,7 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
 [[https://melpa.org/#/org-pdftools][file:https://melpa.org/packages/org-noter-pdftools-badge.svg]]
 
 * Usage
-
+Add ~(require 'org-noter-pdftools)~ to your ~org-noter~ config, and:
 #+BEGIN_SRC elisp
 (use-package org-pdftools
   :hook (org-mode . org-pdftools-setup-link))
@@ -47,6 +47,7 @@ With a prefix ARG, remove start location."
                            (org-noter--pretty-print-location location))))))))
   (with-eval-after-load 'pdf-annot
     (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
+
 #+END_SRC
 
 * Latest release note
