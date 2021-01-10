@@ -147,16 +147,18 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
   "Interface for parse PROPERTY link."
   (when (org-noter-pdftools--location-link-p property)
     (setq property (string-trim property "\\[\\[" "\\]\\]"))
-    (let ((link-regexp (concat "\\(.*\\)::\\([0-9]*\\)\\+\\+\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|" (regexp-quote org-pdftools-search-string-separator) "\\)\\(.*\\)?")))
+    (let ((link-regexp (concat "\\(.*\\)::\\([0-9]*\\)\\+\\+\\([[0-9]\\.*[0-9]*\\)\\(;;\\|" (regexp-quote org-pdftools-search-string-separator) "\\)?\\(.*\\)?")))
       (string-match link-regexp property)
       (let ((path (match-string 1 property))
             (page (match-string 2 property))
             (height (match-string 3 property))
             annot-id search-string)
-        (cond ((string-equal (match-string 4 property) ";;")
-               (setq annot-id (match-string 5 property)))
-              ((string-equal (match-string 4 property) org-pdftools-search-string-separator)
-               (setq search-string (replace-regexp-in-string "%20" " " (match-string 5 property)))))
+        (condition-case nil
+            (cond ((string-equal (match-string 4 property) ";;")
+                   (setq annot-id (match-string 5 property)))
+                  ((string-equal (match-string 4 property) org-pdftools-search-string-separator)
+                   (setq search-string (replace-regexp-in-string "%20" " " (match-string 5 property)))))
+          (error nil))
         (make-org-noter-pdftools--location
          :path path
          :page (and page (string-to-number page))

@@ -18,21 +18,40 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
 (use-package org-noter-pdftools
   :after org-noter
   :config
+  ;; Add a function to ensure precise note is inserted
+  (defun org-noter-pdftools-insert-precise-note (&optional toggle-no-questions)
+    (interactive "P")
+    (org-noter--with-valid-session
+     (let ((org-noter-insert-note-no-questions (if toggle-no-questions
+                                                   (not org-noter-insert-note-no-questions)
+                                                 org-noter-insert-note-no-questions))
+           (org-pdftools-use-isearch-link t)
+           (org-pdftools-use-freestyle-annot t))
+       (org-noter-insert-note (org-noter--get-precise-info)))))
+
+  ;; fix https://github.com/weirdNox/org-noter/pull/93/commits/f8349ae7575e599f375de1be6be2d0d5de4e6cbf
+  (defun org-noter-set-start-location (&optional arg)
+    "When opening a session with this document, go to the current location.
+With a prefix ARG, remove start location."
+    (interactive "P")
+    (org-noter--with-valid-session
+     (let ((inhibit-read-only t)
+           (ast (org-noter--parse-root))
+           (location (org-noter--doc-approx-location (when (called-interactively-p 'any) 'interactive))))
+       (with-current-buffer (org-noter--session-notes-buffer session)
+         (org-with-wide-buffer
+          (goto-char (org-element-property :begin ast))
+          (if arg
+              (org-entry-delete nil org-noter-property-note-location)
+            (org-entry-put nil org-noter-property-note-location
+                           (org-noter--pretty-print-location location))))))))
   (with-eval-after-load 'pdf-annot
     (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
 #+END_SRC
 
 * Latest release note
-- HTML exported link now have a "#page=n" postfix, which should make browsers like Chrome open the corresponding page.
-- You can now customize the link description format using ~org-pdftools-get-desc-function~
-- Added ~org-noter-pdftools-embed-org-note-to-pdf~, ~org-noter-pdftools-embed-all-org-note-to-pdf~ to copy one or all *org-noter annotation headings* (the ones with a ~annot-id~ and ~org-pdftools link~) to the corresponding PDF file.
-- Added ~org-noter-pdftools-embed-org-buffer-to-pdf~ to copy the whole *org-noter* buffer to a annotation in the left upper corner of the first page in the PDF.
-- Added ~org-noter-pdftools-jump-to-note~ config in the README.
-- The prefix of pdftools link can now be customized using ~org-pdftools-link-prefix~, and the default is now set to "pdf"
-- The ~org-pdftools-search-string-separator~ is now set to ~??~ to avoid org fontification problem
-- You can now specify how the path of pdf is stored using two function:
-  - ~org-pdftools-path-generator~ takes ~buffer-file-name~ as an argument, and output a translated path. Default to ~abbreviate-file-name~
-  - ~org-pdftools-path-resolver~ takes a translated path as an argument and translate it back to absolute path. Default to ~expand-file-name~
+- Incorporated https://github.com/weirdNox/org-noter/pull/93/commits/f8349ae7575e599f375de1be6be2d0d5de4e6cbf in Usage README
+- Added customizable variable ~org-pdftools-use-isearch-link~ and ~org-pdftools-use-freepointer-annot~ to control whether you will get prompt to create isearch/freepointer link if no existing annotations are found
 
 * Current features
 The provided function includes:
@@ -46,6 +65,18 @@ The provided function includes:
 - [X] If there are selected texts on the current PDF page, it will be ~marked-up~
   using pdf-tools markup functions (by default, underline) automatically and the
   corresponding annotation id is stored in the link.
+
+- HTML exported link now have a "#page=n" postfix, which should make browsers like Chrome open the corresponding page.
+- You can now customize the link description format using ~org-pdftools-get-desc-function~
+- Added ~org-noter-pdftools-embed-org-note-to-pdf~, ~org-noter-pdftools-embed-all-org-note-to-pdf~ to copy one or all *org-noter annotation headings* (the ones with a ~annot-id~ and ~org-pdftools link~) to the corresponding PDF file.
+- Added ~org-noter-pdftools-embed-org-buffer-to-pdf~ to copy the whole *org-noter* buffer to a annotation in the left upper corner of the first page in the PDF.
+- Added ~org-noter-pdftools-jump-to-note~ config in the README.
+- The prefix of pdftools link can now be customized using ~org-pdftools-link-prefix~, and the default is now set to "pdf"
+- The ~org-pdftools-search-string-separator~ is now set to ~??~ to avoid org fontification problem
+- You can now specify how the path of pdf is stored using two function:
+- ~org-pdftools-path-generator~ takes ~buffer-file-name~ as an argument, and output a translated path. Default to ~abbreviate-file-name~
+- ~org-pdftools-path-resolver~ takes a translated path as an argument and translate it back to absolute path. Default to ~expand-file-name~
+
 
 * Integration with ~org-noter~
 You can use the vanilla ~org-noter~ now.

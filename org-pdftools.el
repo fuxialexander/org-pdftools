@@ -63,6 +63,17 @@ See `org-pdftools-get-desc-default' as an example."
   "Custom function to open linked pdf files."
   :group 'org-pdftools
   :type '(choice function nil))
+
+(defcustom org-pdftools-use-freepointer-annot nil
+  "Whether prompt to use freepointer annotation or not. "
+  :group 'org-pdftools
+  :type 'boolean)
+
+(defcustom org-pdftools-use-isearch-link nil
+  "Whether prompt to use isearch link or not. "
+  :group 'org-pdftools
+  :type 'boolean)
+
 (defcustom org-pdftools-export-style 'pdftools
   "Export style of org-pdftools links.
 - pdftools :: export the link as is
@@ -230,8 +241,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                               (pdf-annot-read-annotation
                                "Click the annotation that you want to link to."))
                            (error
-                            (if (y-or-n-p
-                                 "You can click anywhere on the page to add a link to. Do you want to do that? ")
+                            (if org-pdftools-use-freepointer-annot
                                 (pdf-annot-get-id
                                  (funcall-interactively
                                   #'pdf-annot-add-text-annotation
@@ -241,8 +251,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                                   `((color . ,org-pdftools-free-pointer-color)
                                     (opacity . ,org-pdftools-free-pointer-opacity))))
                               nil)))
-                       (if (y-or-n-p
-                            "You can click anywhere on the page to add a link to. Do you want to do that? ")
+                       (if org-pdftools-use-freepointer-annot
                            (pdf-annot-get-id
                             (funcall-interactively
                              #'pdf-annot-add-text-annotation
@@ -269,8 +278,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                           (cdr (pdf-view-image-size)))))))
          ;; pdf://path::page++height_percent;;annot_id\\|??search-string
          (search-string (if (and (not annot-id)
-                                 (y-or-n-p
-                                  "Do you want to add a isearch link? "))
+                                 org-pdftools-use-isearch-link)
                             isearch-string
                           ""))
          (link (concat
