@@ -169,12 +169,15 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
 
 (defun org-noter-pdftools--pretty-print-location (location)
   "Function for print the LOCATION link."
-  (let ((loc (if (org-noter-pdftools--location-p location)
-                 location
-               (org-noter-pdftools--parse-link location))))
-    (concat "[["
-            (org-noter-pdftools--location-original-property loc)
-            "]]")))
+  (org-noter--with-valid-session
+   (if (memq (org-noter--session-doc-mode session) '(doc-view-mode pdf-view-mode))
+       (let ((loc (if (org-noter-pdftools--location-p location)
+                      location
+                    (org-noter-pdftools--parse-link location))))
+         (concat "[["
+                 (org-noter-pdftools--location-original-property loc)
+                 "]]"))
+    nil)))
 
 (defun org-noter-pdftools--convert-to-location-cons (location)
   "Function for converting the LOCATION link to cons."
