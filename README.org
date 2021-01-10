@@ -1,6 +1,6 @@
 #+TITLE: org-pdftools: a custom org link type for pdf-tools
 
-This project was inspired by and built upon ~org-pdfview~ from @markus1189.
+This proj   ect was inspired by and built upon ~org-pdfview~ from @markus1189.
 * Installation
 
 You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
@@ -9,9 +9,13 @@ You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
 
 [[https://melpa.org/#/org-pdftools][file:https://melpa.org/packages/org-noter-pdftools-badge.svg]]
 
-* Usage
-Add ~(require 'org-noter-pdftools)~ to your ~org-noter~ config, and:
+Run ~M-x pdf-tools-install~ after installation of ~pdftools~ if you haven't done before.
 #+BEGIN_SRC elisp
+(use-package org-noter
+  :config
+  ;; Your org-noter config ........
+  (require 'org-noter-pdftools))
+
 (use-package org-pdftools
   :hook (org-mode . org-pdftools-setup-link))
 
@@ -47,7 +51,6 @@ With a prefix ARG, remove start location."
                            (org-noter--pretty-print-location location))))))))
   (with-eval-after-load 'pdf-annot
     (add-hook 'pdf-annot-activate-handler-functions #'org-noter-pdftools-jump-to-note)))
-
 #+END_SRC
 
 * Latest release note
