@@ -207,9 +207,12 @@ Can be one of highlight/underline/strikeout/squiggly."
                     (with-selected-window
                         (org-noter--get-doc-window)
                       (isearch-mode t)
-                      (isearch-yank-string search-string)))
+                      (let (pdf-isearch-narrow-to-page t)
+                        (isearch-yank-string search-string))
+                        ))
                  (isearch-mode t)
-                 (isearch-yank-string search-string)))))
+                 (let (pdf-isearch-narrow-to-page t)
+                   (isearch-yank-string search-string))))))
           ((string-match
             "\\(.*\\)@@\\(.*\\)"
             link)
@@ -231,7 +234,7 @@ Can be one of highlight/underline/strikeout/squiggly."
                        (pdf-annot-get-id
                         (funcall
                          org-pdftools-markup-pointer-function
-                         (pdf-view-active-region t)
+                         (pdf-view-active-region)
                          org-pdftools-markup-pointer-color
                          `((opacity . ,org-pdftools-markup-pointer-opacity))))
                      (if (and (not (bound-and-true-p org-noter--session))
