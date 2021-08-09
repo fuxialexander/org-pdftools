@@ -30,7 +30,7 @@ Run ~M-x pdf-tools-install~ after installation of ~pdftools~ if you haven't done
                                                    (not org-noter-insert-note-no-questions)
                                                  org-noter-insert-note-no-questions))
            (org-pdftools-use-isearch-link t)
-           (org-pdftools-use-freestyle-annot t))
+           (org-pdftools-use-freepointer-annot t))
        (org-noter-insert-note (org-noter--get-precise-info)))))
 
   ;; fix https://github.com/weirdNox/org-noter/pull/93/commits/f8349ae7575e599f375de1be6be2d0d5de4e6cbf
