@@ -1,6 +1,6 @@
 #+TITLE: org-pdftools: a custom org link type for pdf-tools
 
-This proj   ect was inspired by and built upon ~org-pdfview~ from @markus1189.
+This project was inspired by and built upon ~org-pdfview~ from @markus1189.
 * Installation
 
 You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
