@@ -1,6 +1,6 @@
 #+TITLE: org-pdftools: a custom org link type for pdf-tools
 
-This proj   ect was inspired by and built upon ~org-pdfview~ from @markus1189.
+This project was inspired by and built upon ~org-pdfview~ from @markus1189.
 * Installation
 
 You can now install ~org-pdftools~ and ~org-noter-pdftools~ from MELPA!
@@ -57,10 +57,22 @@ With a prefix ARG, remove start location."
 - Incorporated https://github.com/weirdNox/org-noter/pull/93/commits/f8349ae7575e599f375de1be6be2d0d5de4e6cbf in Usage README
 - Added customizable variable ~org-pdftools-use-isearch-link~ and ~org-pdftools-use-freepointer-annot~ to control whether you will get prompt to create isearch/freepointer link if no existing annotations are found
 
+* Usage 
+In order to link a specific page of a .pdf-file in an org-file, use the following syntax:
+#+begin_example 
+[[pdf:~/file.pdf::3][Link to page 3]]
+#+end_example
+
+When browsing a pdftools-buffer you can use =org-store-link= (by default =C-c l=) to get a link to this location withing the pdf -- even while marking some content in the .pdf. 
+Then use =org-insert-link= (by default =C-c C-l=) to create a link to this page and this place on the page:
+#+begin_example
+[[pdf:~/file.pdf::5++0.00;;annot-5-0][file.pdf: Page 5; Quoting: some text]]
+#+end_example
+
 * Current features
 The provided function includes:
 - [X] (Sort-of) backward compatibility with org-pdfview: simply change the link prefix from
-  ~pdfview:~ to ~pdftools:~.
+  ~pdfview:~ to ~pdf:~.
 - [X] The reason this URL prefix change was proposed is that ~pdftools:~ links can
   also point to ~pdf-occur~ searchs. Multi-file search is also supported.
 - [X] There is also support for ~pdf-isearch~.
