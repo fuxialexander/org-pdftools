@@ -399,15 +399,35 @@ Can be one of highlight/underline/strikeout/squiggly."
   "Use the existing file name completion for file.
 Links to get the file name, then ask the user for the page number
 and append it. ARG is passed to `org-link-complete-file'."
-  (concat
-   (replace-regexp-in-string
-    "^file:"
-    (concat org-pdftools-link-prefix ":")
-    (org-link-complete-file arg))
-   "::"
-   (read-from-minibuffer
-    "Page:"
-    "1")))
+  (let* ((pdf-or-dir-p '(lambda (file-name)
+                          (string-match "/$\\|.pdf$" file-name)))
+         ;; pdf-or-dir-p, a predicate returns t when file's path
+         ;; is a directory or ends with .pdf.
+         (current-read-file-name-function read-file-name-function)
+         ;; Replace the `read-file-name-function' temporarily,
+         ;; See its docstring for more.
+         (read-file-name-function
+          ;; This is the replacement, it's just a wrapper, it passes
+          ;; the same argument to the old read file name function, one
+          ;; difference is the PREDICATE arguement being our defined
+          ;; pdf-or-dir-p.
+          ;; Why?: So that `org-link-complete-file' only "show" pdf file
+          ;; or directory.
+          (lambda
+            (prompt &optional dir default-filename mustmatch initial
+                    predicate)
+            (funcall current-read-file-name-function
+                     prompt dir default-filename mustmatch initial
+                     pdf-or-dir-p))))                     
+    (concat
+     (replace-regexp-in-string
+      "^file:"
+      (concat org-pdftools-link-prefix ":")
+      (org-link-complete-file arg))
+     "::"
+     (read-from-minibuffer
+      "Page:"
+      "1"))))
 
 (provide 'org-pdftools)
 ;;; org-pdftools.el ends here
