@@ -175,19 +175,11 @@ Can be one of highlight/underline/strikeout/squiggly."
                     (with-selected-window
                         (org-noter--get-doc-window)
                       (image-set-window-vscroll
-                       (round
-                        (/
-                         (*
-                          (string-to-number height)
-                          (cdr (pdf-view-image-size)))
-                         (frame-char-height))))))
+                       (* (string-to-number height)
+                          (cdr (pdf-view-image-size))))))
                  (image-set-window-vscroll
-                  (round
-                   (/
-                    (*
-                     (string-to-number height)
-                     (cdr (pdf-view-image-size)))
-                    (frame-char-height))))))
+                  (* (string-to-number height)
+                     (cdr (pdf-view-image-size))))))
              (when (and annot-id
                         (not (string-empty-p annot-id)))
                (if (bound-and-true-p org-noter--session)
