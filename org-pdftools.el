@@ -264,11 +264,9 @@ Can be one of highlight/underline/strikeout/squiggly."
                                 'edges)))
                        (t
                         (/
-                         (*
-                          (or (image-mode-window-get
-                               'vscroll)
-                              0)
-                          (frame-char-height))
+                         (or (image-mode-window-get
+                              'vscroll)
+                             0)
                          (float
                           (cdr (pdf-view-image-size)))))))
          ;; pdf://path::page++height_percent;;annot_id\\|??search-string
