@@ -131,7 +131,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
           (number-to-string
            (car location))
           "++"
-          (format "%.2f" (cdr location))))
+          (format "%.2f" (cadr location))))
         ((integerp location)
          (concat
           "::"
@@ -195,7 +195,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
                  (org-noter-pdftools--parse-link location))))
       (org-noter-pdftools--location-link-to-cons loc))))
 
-(defun org-noter-pdftools--doc-goto-location (mode location)
+(defun org-noter-pdftools--doc-goto-location (mode location  &optional _window)
   "Goto LOCATION in the corresponding MODE."
   (when (and (eq mode 'pdf-view-mode) (org-noter-pdftools--location-p location))
     (when (org-noter-pdftools--location-page location)
@@ -221,7 +221,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
   (when (org-noter-pdftools--location-p location)
     (org-noter--relative-position-to-view (org-noter-pdftools--location-link-to-cons location) view)))
 
-(defun org-noter-pdftools--get-precise-info (mode)
+(defun org-noter-pdftools--get-precise-info (mode &optional _window)
   "Get precise info from MODE."
   (when (eq mode 'pdf-view-mode)
     (let ((org-pdftools-free-pointer-icon org-noter-pdftools-free-pointer-icon)
@@ -298,7 +298,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
                              (car location)
                            location))
                    (height (if (consp location)
-                               (cdr location)
+                               (cadr location)
                              0.0))
                    (pos `(0 . ,(round
                                 (*
