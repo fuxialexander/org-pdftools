@@ -453,7 +453,9 @@ Only available with PDF Tools."
                               "::"
                               (number-to-string page)
                               "++"
-                              (number-to-string top)
+                              (if top
+                                  (number-to-string top)
+                               "0")
                               org-pdftools-search-string-separator
                               (replace-regexp-in-string
                                " "
