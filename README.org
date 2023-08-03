@@ -16,8 +16,7 @@ Run ~M-x pdf-tools-install~ after installation of ~pdftools~ if you haven't done
   ;; Your org-noter config ........
   (require 'org-noter-pdftools))
 
-(use-package org-pdftools
-  :hook (org-mode . org-pdftools-setup-link))
+(use-package org-pdftools)
 
 (use-package org-noter-pdftools
   :after org-noter
