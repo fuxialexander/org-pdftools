@@ -429,5 +429,8 @@ and append it. ARG is passed to `org-link-complete-file'."
       "Page:"
       "1"))))
 
+(with-eval-after-load 'org
+  (add-hook 'org-mode-hook #'org-pdftools-setup-link))
+
 (provide 'org-pdftools)
 ;;; org-pdftools.el ends here
