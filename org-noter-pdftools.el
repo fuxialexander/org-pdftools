@@ -416,7 +416,7 @@ To use this, `org-noter-pdftools-use-org-id' has to be t."
          nil)))))
 
 ;; TODO(nox): Implement interface for skeleton creation
-(defun org-noter-pdftools-create-skeleton ()
+(defun org-noter-pdftools-create-skeleton (&optional page-number)
   "Create notes skeleton with the PDF outline or annotations.
 Only available with PDF Tools."
   (interactive)
@@ -505,7 +505,7 @@ Only available with PDF Tools."
 
              (setq insert-contents (y-or-n-p "Should we insert the annotations contents? "))
 
-             (dolist (item (pdf-info-getannots))
+             (dolist (item (pdf-info-getannots page-number))
                (let* ((type (alist-get 'type item))
                       (page (alist-get 'page item))
                       (edges (or (org-noter--pdf-tools-edges-to-region (alist-get 'markup-edges item))
