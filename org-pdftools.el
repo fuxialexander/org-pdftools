@@ -375,7 +375,7 @@ Can be one of highlight/underline/strikeout/squiggly."
             path
             page
             description))
-          ((eq format 'latex)
+          ((or (eq format 'latex) (eql format 'beamer))
            (format
             "\\href{%s}{%s}"
             path
