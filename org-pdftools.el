@@ -366,6 +366,9 @@ Can be one of highlight/underline/strikeout/squiggly."
             (setq page loc)))
       (setq path link))
 
+    (unless description
+      (setf description (file-name-nondirectory path)))
+
     ;; `org-export-file-uri` expands the filename correctly
     (setq path (org-export-file-uri (org-link-escape path)))
 
