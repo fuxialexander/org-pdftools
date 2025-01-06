@@ -320,9 +320,10 @@ Can be one of highlight/underline/strikeout/squiggly."
        link)
     (if (bound-and-true-p org-pdftools-open-custom-open)
         (funcall org-pdftools-open-custom-open link)
-      (let* ((path (when (string-match
-                          "\\(.+\\)::.+" link)
-                     (match-string 1 link))))
+      (let* ((path (if (string-match
+                        "\\(.+\\)::.?" link)
+                       (match-string 1 link)
+                     link)))
         (org-open-file path)))))
 
 ;;;###autoload
