@@ -311,17 +311,19 @@ Can be one of highlight/underline/strikeout/squiggly."
   (concat file ".pdf: Page " page (when text (concat "; Quoting: " text))))
 
 ;;;###autoload
-(defun org-pdftools-open (link)
+(defun org-pdftools-open (link &optional arg)
   "Function to open org-pdftools LINK."
-  (if (and (display-graphic-p)
+  (if (and (not arg)
+           (display-graphic-p)
            (featurep 'pdf-tools))
       (org-pdftools-open-pdftools
        link)
     (if (bound-and-true-p org-pdftools-open-custom-open)
         (funcall org-pdftools-open-custom-open link)
-      (let* ((path (when (string-match
-                          "\\(.+\\)::.+" link)
-                     (match-string 1 link))))
+      (let* ((path (if (string-match
+                        "\\(.+\\)::.?" link)
+                       (match-string 1 link)
+                     link)))
         (org-open-file path)))))
 
 ;;;###autoload
