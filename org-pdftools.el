@@ -60,10 +60,18 @@ See `org-pdftools-get-desc-default' as an example."
 "Resolve your translated PDF file path back to an absolute path."
   :group 'org-pdftools
   :type 'function)
+(defcustom org-pdftools-path-exporter #'org-pdftools-export-file-name
+"Resolve your translated PDF file path back to an absolute or relative path for export."
+  :group 'org-pdftools
+  :type 'function)
 (defcustom org-pdftools-path-translations nil
   "An alist of form (FROM . TO) to specify path translations.
 Expands path starting with `FROM' to `TO' when opening links.
 And reverse substitutes from `TO' to `FROM' occurs when creating pdf links."
+  :group 'org-pdftools
+  :type 'alist)
+(defcustom org-pdftools-path-export-translations nil
+  "An alist of (FROM . TO) such that path starting with `FROM' are expanded to `TO' when exporting links."
   :group 'org-pdftools
   :type 'alist)
 (defcustom org-pdftools-open-custom-open nil
@@ -121,10 +129,14 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'float)
 
-(defun org-pdftools-add-path-translation (from to-open)
+(cl-defun org-pdftools-add-path-translation (from to-open &optional (to-export to-open))
   "Add path translation rule for opening, creating and exporting links.
-Adds translation rule to replace `FROM' with `TO-OPEN' when opening links."
-  (cl-pushnew (cons from to-open) org-pdftools-path-translations :test #'equalp))
+Adds translation rule to replace `FROM' with `TO-OPEN' when opening links and
+with `TO-EXPORT' when exporting links. Also use reverse translation from
+`TO-OPEN' to `FROM' when creating links."
+  (cl-pushnew (cons from to-open) org-pdftools-path-translations :test #'equalp)
+  (when to-export
+    (cl-pushnew (cons from to-export) org-pdftools-path-export-translations :test #'equalp)))
 
 (defun org-pdftools-abbreviate-file-name (path)
   "Abbreviate `PATH' using `org-pdftools-path-translations'."
@@ -139,18 +151,28 @@ Adds translation rule to replace `FROM' with `TO-OPEN' when opening links."
                           (cl-subseq path (length to))))
       (abbreviate-file-name path))))
 
-(defun org-pdftools-expand-file-name (path)
-  "Expand `PATH' as per `org-pdftools-path-translations'."
+(defun org-pdftools--apply-translations (path rules)
+  "Expand `PATH' using `RULES'.
+- `RULES' is an alist of (FROM . TO).
+If no rules match, `PATH' is returned as it is."
   (let ((translation-rule (find-if (lambda (rule)
                                      (cl-destructuring-bind (from . to) rule
                                        (string-prefix-p from path)))
-                                   org-pdftools-path-translations)))
-    (when translation-rule
-      (cl-destructuring-bind (from . to) translation-rule
-      (setf path (cl-concatenate 'string
-                                 to
-                                 (cl-subseq path (length from))))))
-    (expand-file-name path)))
+                                   rules)))
+    (if translation-rule
+        (cl-destructuring-bind (from . to) translation-rule
+          (setf path (cl-concatenate 'string
+                                     to
+                                     (cl-subseq path (length from)))))
+      path)))
+
+(defun org-pdftools-expand-file-name (path)
+  "Expand `PATH' as per `org-pdftools-path-translations'."
+  (expand-file-name (org-pdftools--apply-translations path org-pdftools-path-translations)))
+
+(defun org-pdftools-export-file-name (path)
+  "Expand `PATH' as per `org-pdftools-path-export-translations'."
+  (org-pdftools--apply-translations path org-pdftools-path-export-translations))
 
 (defun org-pdftools-parse-link (link)
   "Parse a pdf: `LINK'.
@@ -421,7 +443,7 @@ Returns components of the path"
         (setf description (file-name-nondirectory path)))
 
       ;; `org-export-file-uri` expands the filename correctly
-      (setq path (org-export-file-uri (org-link-escape (funcall org-pdftools-path-resolver path))))
+      (setq path (org-export-file-uri (org-link-escape (funcall org-pdftools-path-exporter path))))
       (cond ((eq format 'html)
              (format
               "<a href=\"%s#page=%s\">%s</a>"
