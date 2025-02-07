@@ -145,9 +145,9 @@ Can be one of highlight/underline/strikeout/squiggly."
                                  (cl-subseq path (length from))))))
     (expand-file-name path)))
 
-;; pdf://path::page++height_percent;;annot_id??isearch_string or @@occur_search_string
-(defun org-pdftools-open-pdftools (link)
-  "Internal function to open org-pdftools LINK."
+(defun org-pdftools-parse-link (link)
+  "Parse a pdf: `LINK'.
+Returns components of the path"
   (let ((link-regexp
          (concat "\\(.*\\)::\\([0-9]*\\)\\(\\+\\+\\)?\\([[0-9]\\.*[0-9]*\\)?\\(;;\\|"
                  (regexp-quote org-pdftools-search-string-separator)
@@ -171,6 +171,28 @@ Can be one of highlight/underline/strikeout/squiggly."
                            "%20"
                            " "
                            (match-string 6 link)))))
+             (list :path path
+                   :page page
+                   :height height
+                   :annot-id annot-id
+                   :search-string search-string)))
+          ((string-match
+            "\\(.*\\)@@\\(.*\\)"
+            link)
+           (let* ((paths (match-string 1 link))
+                  (occur-search-string (match-string 2 link))
+                  (pathlist (split-string paths "%&%")))
+             (list :pathlist pathlist
+                   :occur-search-string occur-search-string)))
+          (t
+           (list :path link)))))
+
+;; pdf://path::page++height_percent;;annot_id??isearch_string or @@occur_search_string
+(defun org-pdftools-open-pdftools (link)
+  "Internal function to open org-pdftools LINK."
+  (let ((pdf-link (org-pdftools-parse-link link)))
+    (cond ((getf pdf-link :path)
+           (cl-destructuring-bind (&key path page height annot-id search-string) pdf-link
              (when (and path
                         (not (string-empty-p path)))
                (if (bound-and-true-p org-noter--session)
@@ -242,16 +264,11 @@ Can be one of highlight/underline/strikeout/squiggly."
                  (isearch-mode t)
                  (let (pdf-isearch-narrow-to-page t)
                    (isearch-yank-string search-string))))))
-          ((string-match
-            "\\(.*\\)@@\\(.*\\)"
-            link)
-           (let* ((paths (match-string 1 link))
-                  (occur-search-string (match-string 2 link))
-                  (pathlist (split-string paths "%&%")))
-             (pdf-occur-search
-              pathlist
-              occur-search-string)))
-          ((org-open-file (funcall org-pdftools-path-resolver link) 1)))))
+          ((getf pdf-link :pathlist)
+           (pdf-occur-search
+            pathlist
+            occur-search-string))
+          (t (message "Invalid pdf link.")))))
 
 (defun org-pdftools-get-link ()
   "Get link from the active pdf buffer."
@@ -348,10 +365,10 @@ Can be one of highlight/underline/strikeout/squiggly."
        link)
     (if (bound-and-true-p org-pdftools-open-custom-open)
         (funcall org-pdftools-open-custom-open link)
-      (let* ((path (when (string-match
-                          "\\(.+\\)::.+" link)
-                     (match-string 1 link))))
-        (org-open-file path)))))
+      (let ((pdf-link (org-pdftools-parse-link link)))
+        (if (getf pdf-link :occur-search-string)
+            (message "Please install pdf-tools to open pdf-occur links")
+          (org-open-file (getf pdf-link :path)))))))
 
 ;;;###autoload
 (defun org-pdftools-store-link ()
@@ -385,33 +402,29 @@ Can be one of highlight/underline/strikeout/squiggly."
 ;;;###autoload
 (defun org-pdftools-export (link description format)
   "Export the pdfview LINK with DESCRIPTION for FORMAT from Org files."
-  (let* (path loc page)
-    (if (string-match "\\(.+\\)::\\(.*\\)" link)
-        (progn
-          (setq path (match-string 1 link))
-          (setq loc (match-string 2 link))
-          (if (string-match "\\([0-9]+\\)++\\(.*\\)" loc)
-              (setq page (match-string 1 loc))
-            (setq page loc)))
-      (setq path link))
+  (let ((pdf-link (org-pdftools-parse-link link)))
+    (cl-destructuring-bind (&key path page &allow-other-keys) pdf-link
 
-    ;; `org-export-file-uri` expands the filename correctly
-    (setq path (org-export-file-uri (org-link-escape path)))
+      (unless description
+        (setf description (file-name-nondirectory path)))
 
-    (cond ((eq format 'html)
-           (format
-            "<a href=\"%s#page=%s\">%s</a>"
-            path
-            page
-            description))
-          ((eq format 'latex)
-           (format
-            "\\href{%s}{%s}"
-            path
-            description))
-          ((eq format 'ascii)
-           (format "%s (%s)" description path))
-          (t path))))
+      ;; `org-export-file-uri` expands the filename correctly
+      (setq path (org-export-file-uri (org-link-escape path)))
+
+      (cond ((eq format 'html)
+             (format
+              "<a href=\"%s#page=%s\">%s</a>"
+              path
+              page
+              description))
+            ((or (eq format 'latex) (eql format 'beamer))
+             (format
+              "\\href{%s}{%s}"
+              path
+              description))
+            ((eq format 'ascii)
+             (format "%s (%s)" description path))
+            (t path)))))
 
 ;;;###autoload
 (defun org-pdftools-setup-link (&optional prefix)
