@@ -4,7 +4,7 @@
 ;; Author: Alexander Fu Xi <fuxialexander@gmail.com>
 ;; Maintainer: Alexander Fu Xi <fuxialexnader@gmail.com>
 ;; Homepage: https://github.com/fuxialexander/org-pdftools
-;; Version: 1.0
+;; Version: 1.1
 ;; Keywords: convenience
 ;; Package-Requires: ((emacs "26.1") (org "9.3.6") (pdf-tools "0.8") (org-noter "1.4.1"))
 
@@ -51,14 +51,18 @@ See `org-pdftools-get-desc-default' as an example."
 
   :group 'org-pdftools
   :type 'function)
-(defcustom org-pdftools-path-generator #'abbreviate-file-name
+(defcustom org-pdftools-path-generator #'org-pdftools-abbreviate-file-name
 "Translate your PDF file path the way you like. Take buffer-file-name as the argument."
   :group 'org-pdftools
   :type 'function)
-(defcustom org-pdftools-path-resolver #'expand-file-name
+(defcustom org-pdftools-path-resolver #'org-pdftools-expand-file-name
 "Resolve your translated PDF file path back to an absolute path."
   :group 'org-pdftools
   :type 'function)
+(defcustom org-pdftools-path-translations nil
+  "An alist of (FROM . TO) such that path starting with FROM/* are expanded to TO/*."
+  :group 'org-pdftools
+  :type 'alist)
 (defcustom org-pdftools-open-custom-open nil
   "Custom function to open linked pdf files."
   :group 'org-pdftools
@@ -115,6 +119,31 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'float)
 
+(defun org-pdftools-abbreviate-file-name (path)
+  "Abbreviate `PATH' using `org-pdftools-path-translations'"
+  (let ((translation-rule (find-if (lambda (rule)
+                                     (cl-destructuring-bind (from . to) rule
+                                       (string-prefix-p to path)))
+                                   org-pdftools-path-translations)))
+    (if translation-rule
+        (cl-destructuring-bind (from . to) translation-rule
+          (cl-concatenate 'string
+                          from
+                          (cl-subseq path (length to))))
+      (abbreviate-file-name path))))
+
+(defun org-pdftools-expand-file-name (path)
+  "Expand `PATH' as per org-pdftools-path-subtitutions."
+  (let ((translation-rule (find-if (lambda (rule)
+                                     (cl-destructuring-bind (from . to) rule
+                                       (string-prefix-p from path)))
+                                   org-pdftools-path-translations)))
+    (when translation-rule
+      (cl-destructuring-bind (from . to) translation-rule
+      (setf path (cl-concatenate 'string
+                                 to
+                                 (cl-subseq path (length from))))))
+    (expand-file-name path)))
 
 ;; pdf://path::page++height_percent;;annot_id??isearch_string or @@occur_search_string
 (defun org-pdftools-open-pdftools (link)
@@ -222,7 +251,7 @@ Can be one of highlight/underline/strikeout/squiggly."
              (pdf-occur-search
               pathlist
               occur-search-string)))
-          ((org-open-file link 1)))))
+          ((org-open-file (funcall org-pdftools-path-resolver link) 1)))))
 
 (defun org-pdftools-get-link ()
   "Get link from the active pdf buffer."
@@ -418,7 +447,7 @@ and append it. ARG is passed to `org-link-complete-file'."
                     predicate)
             (funcall current-read-file-name-function
                      prompt dir default-filename mustmatch initial
-                     pdf-or-dir-p))))                     
+                     pdf-or-dir-p))))
     (concat
      (replace-regexp-in-string
       "^file:"
