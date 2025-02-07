@@ -46,13 +46,14 @@
   "A function that takes 3 arguments and output a link description.
 - `file': basename of the PDF file
 - `page': current page number converted to string
-- `text' (should have optional tag): additional text infomation like highlighted text or isearch string.
+- `text' (should have optional tag): additional text infomation like
+         highlighted text or isearch string.
 See `org-pdftools-get-desc-default' as an example."
 
   :group 'org-pdftools
   :type 'function)
 (defcustom org-pdftools-path-generator #'org-pdftools-abbreviate-file-name
-"Translate your PDF file path the way you like. Take buffer-file-name as the argument."
+"Translate your PDF file path the way you like. Take variable `buffer-file-name' as the argument."
   :group 'org-pdftools
   :type 'function)
 (defcustom org-pdftools-path-resolver #'org-pdftools-expand-file-name
@@ -60,7 +61,9 @@ See `org-pdftools-get-desc-default' as an example."
   :group 'org-pdftools
   :type 'function)
 (defcustom org-pdftools-path-translations nil
-  "An alist of (FROM . TO) such that path starting with FROM/* are expanded to TO/*."
+  "An alist of form (FROM . TO) to specify path translations.
+Expands path starting with `FROM' to `TO' when opening links.
+And reverse substitutes from `TO' to `FROM' occurs when creating pdf links."
   :group 'org-pdftools
   :type 'alist)
 (defcustom org-pdftools-open-custom-open nil
@@ -69,20 +72,19 @@ See `org-pdftools-get-desc-default' as an example."
   :type '(choice function nil))
 
 (defcustom org-pdftools-use-freepointer-annot nil
-  "Whether prompt to use freepointer annotation or not. "
+  "Whether prompt to use freepointer annotation or not."
   :group 'org-pdftools
   :type 'boolean)
 
 (defcustom org-pdftools-use-isearch-link nil
-  "Whether prompt to use isearch link or not. "
+  "Whether prompt to use isearch link or not."
   :group 'org-pdftools
   :type 'boolean)
 
 (defcustom org-pdftools-export-style 'pdftools
   "Export style of org-pdftools links.
 - pdftools :: export the link as is
-- protocol :: export the link as a org-protocal link such that it could open pdf-tools when clicked
-"
+- protocol :: export the link as a org-protocal link such that it could open pdf-tools when clicked"
   :group 'org-pdftools
   :type 'symbol)
 (defcustom org-pdftools-markup-pointer-function 'pdf-annot-add-underline-markup-annotation
@@ -103,7 +105,7 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'string)
 (defcustom org-pdftools-link-prefix "pdf"
-  "Prefix for org-pdftools link"
+  "Prefix for org-pdftools link."
   :group 'org-pdftools
   :type 'string)
 (defcustom org-pdftools-search-string-separator "??"
@@ -119,8 +121,13 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'float)
 
+(defun org-pdftools-add-path-translation (from to-open)
+  "Add path translation rule for opening, creating and exporting links.
+Adds translation rule to replace `FROM' with `TO-OPEN' when opening links."
+  (cl-pushnew (cons from to-open) org-pdftools-path-translations :test #'equalp))
+
 (defun org-pdftools-abbreviate-file-name (path)
-  "Abbreviate `PATH' using `org-pdftools-path-translations'"
+  "Abbreviate `PATH' using `org-pdftools-path-translations'."
   (let ((translation-rule (find-if (lambda (rule)
                                      (cl-destructuring-bind (from . to) rule
                                        (string-prefix-p to path)))
@@ -133,7 +140,7 @@ Can be one of highlight/underline/strikeout/squiggly."
       (abbreviate-file-name path))))
 
 (defun org-pdftools-expand-file-name (path)
-  "Expand `PATH' as per org-pdftools-path-subtitutions."
+  "Expand `PATH' as per `org-pdftools-path-translations'."
   (let ((translation-rule (find-if (lambda (rule)
                                      (cl-destructuring-bind (from . to) rule
                                        (string-prefix-p from path)))
@@ -354,6 +361,11 @@ Returns components of the path"
     link))
 
 (defun org-pdftools-get-desc-default (file page &optional text)
+  "Get description for newly createad pdf link.
+- `FILE': basename of the PDF file
+- `PAGE': current page number converted to string
+- `TEXT' (should have optional tag): additional text infomation like
+         highlighted text or isearch string."
   (concat file ".pdf: Page " page (when text (concat "; Quoting: " text))))
 
 ;;;###autoload
@@ -409,8 +421,7 @@ Returns components of the path"
         (setf description (file-name-nondirectory path)))
 
       ;; `org-export-file-uri` expands the filename correctly
-      (setq path (org-export-file-uri (org-link-escape path)))
-
+      (setq path (org-export-file-uri (org-link-escape (funcall org-pdftools-path-resolver path))))
       (cond ((eq format 'html)
              (format
               "<a href=\"%s#page=%s\">%s</a>"
@@ -428,7 +439,9 @@ Returns components of the path"
 
 ;;;###autoload
 (defun org-pdftools-setup-link (&optional prefix)
-  "Set up pdf: links in org-mode."
+  "Set up pdf links in `org-mode'.
+Optional argument PREFIX specifies link prefix.
+Default value is variable `org-pdftools-link-prefix' (pdf:)."
   (setq org-pdftools-prefix (or prefix org-pdftools-link-prefix))
   (org-link-set-parameters org-pdftools-prefix
                            :follow #'org-pdftools-open
