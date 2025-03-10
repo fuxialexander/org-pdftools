@@ -255,19 +255,11 @@ Returns components of the path"
                     (with-selected-window
                         (org-noter--get-doc-window)
                       (image-set-window-vscroll
-                       (round
-                        (/
-                         (*
-                          (string-to-number height)
-                          (cdr (pdf-view-image-size)))
-                         (frame-char-height))))))
+                       (* (string-to-number height)
+                          (cdr (pdf-view-image-size))))))
                  (image-set-window-vscroll
-                  (round
-                   (/
-                    (*
-                     (string-to-number height)
-                     (cdr (pdf-view-image-size)))
-                    (frame-char-height))))))
+                  (* (string-to-number height)
+                     (cdr (pdf-view-image-size))))))
              (when (and annot-id
                         (not (string-empty-p annot-id)))
                (if (bound-and-true-p org-noter--session)
@@ -347,11 +339,9 @@ Returns components of the path"
                                 'edges)))
                        (t
                         (/
-                         (*
-                          (or (image-mode-window-get
-                               'vscroll)
-                              0)
-                          (frame-char-height))
+                         (or (image-mode-window-get
+                              'vscroll)
+                             0)
                          (float
                           (cdr (pdf-view-image-size)))))))
          ;; pdf://path::page++height_percent;;annot_id\\|??search-string
