@@ -287,11 +287,10 @@ Returns components of the path"
                     (with-selected-window
                         (org-noter--get-doc-window)
                       (isearch-mode t)
-                      (let (pdf-isearch-narrow-to-page t)
-                        (isearch-yank-string search-string))
-                        ))
+                      (let ((pdf-isearch-narrow-to-page t))
+                        (isearch-yank-string search-string))))
                  (isearch-mode t)
-                 (let (pdf-isearch-narrow-to-page t)
+                 (let ((pdf-isearch-narrow-to-page t))
                    (isearch-yank-string search-string))))))
           ((cl-getf pdf-link :pathlist)
            (pdf-occur-search
