@@ -31,6 +31,7 @@
 (require 'subr-x)
 (require 'cl-lib)
 (require 'org)
+(require 'ox)
 (require 'org-refile nil t)
 (require 'org-noter)
 (require 'pdf-tools)
@@ -53,31 +54,37 @@ See `org-pdftools-get-desc-default' as an example."
   :group 'org-pdftools
   :type 'function)
 (defcustom org-pdftools-path-generator #'org-pdftools-abbreviate-file-name
-"Translate your PDF file path the way you like. Take variable `buffer-file-name' as the argument."
+"Translate your PDF file path to org link path.
+The function takes (variable)`buffer-file-name' of the pdf as the argument."
   :group 'org-pdftools
   :type 'function)
 (defcustom org-pdftools-path-resolver #'org-pdftools-expand-file-name
-"Resolve your translated PDF file path back to an absolute path."
+"Resolve pdf: file path back to an absolute path."
   :group 'org-pdftools
   :type 'function)
 (defcustom org-pdftools-path-exporter #'org-pdftools-export-file-name
-"Resolve your translated PDF file path back to an absolute or relative path for export."
+"Resolve pdf: file path back to an absolute or relative path for export."
   :group 'org-pdftools
   :type 'function)
 (defcustom org-pdftools-path-translations nil
   "An alist of form (FROM . TO) to specify path translations.
 Expands path starting with `FROM' to `TO' when opening links.
-And reverse substitutes from `TO' to `FROM' occurs when creating pdf links."
+And reverse substitutes from `TO' to `FROM' occurs when creating pdf links.
+This variable is used by default `org-pdftools-path-generator' and
+`org-pdftools-path-resolver'."
   :group 'org-pdftools
   :type 'alist)
 (defcustom org-pdftools-path-export-translations nil
-  "An alist of (FROM . TO) such that path starting with `FROM' are expanded to `TO' when exporting links."
+  "An alist of (FROM . TO) to specify path translations for export.
+The path starting with `FROM' are expanded to `TO' when exporting links.
+This variable is used by default `org-pdftools-path-exporter'."
   :group 'org-pdftools
   :type 'alist)
 (defcustom org-pdftools-open-custom-open nil
   "Custom function to open linked pdf files."
   :group 'org-pdftools
-  :type '(choice function nil))
+  :type '(choice (const :tag "No function" nil)
+                 (function :tag "A function to open the PDF")))
 
 (defcustom org-pdftools-use-freepointer-annot nil
   "Whether prompt to use freepointer annotation or not."
@@ -92,7 +99,8 @@ And reverse substitutes from `TO' to `FROM' occurs when creating pdf links."
 (defcustom org-pdftools-export-style 'pdftools
   "Export style of org-pdftools links.
 - pdftools :: export the link as is
-- protocol :: export the link as a org-protocal link such that it could open pdf-tools when clicked"
+- protocol :: export the link as a org-protocal link such that it could open
+              pdf-tools when clicked"
   :group 'org-pdftools
   :type 'symbol)
 (defcustom org-pdftools-markup-pointer-function 'pdf-annot-add-underline-markup-annotation
@@ -109,7 +117,7 @@ Can be one of highlight/underline/strikeout/squiggly."
   :group 'org-pdftools
   :type 'float)
 (defcustom org-pdftools-free-pointer-icon "Circle"
-  "Color for free pointer annotations. Refer to `pdf-annot-standard-text-icons`."
+  "Color for free pointer annotations.  Refer to `pdf-annot-standard-text-icons`."
   :group 'org-pdftools
   :type 'string)
 (defcustom org-pdftools-link-prefix "pdf"
@@ -132,16 +140,16 @@ Can be one of highlight/underline/strikeout/squiggly."
 (cl-defun org-pdftools-add-path-translation (from to-open &optional (to-export to-open))
   "Add path translation rule for opening, creating and exporting links.
 Adds translation rule to replace `FROM' with `TO-OPEN' when opening links and
-with `TO-EXPORT' when exporting links. Also use reverse translation from
+with `TO-EXPORT' when exporting links.  Also use reverse translation from
 `TO-OPEN' to `FROM' when creating links."
-  (cl-pushnew (cons from to-open) org-pdftools-path-translations :test #'equalp)
+  (cl-pushnew (cons from to-open) org-pdftools-path-translations :test #'cl-equalp)
   (when to-export
-    (cl-pushnew (cons from to-export) org-pdftools-path-export-translations :test #'equalp)))
+    (cl-pushnew (cons from to-export) org-pdftools-path-export-translations :test #'cl-equalp)))
 
 (defun org-pdftools-abbreviate-file-name (path)
   "Abbreviate `PATH' using `org-pdftools-path-translations'."
   (let ((translation-rule (cl-find-if (lambda (rule)
-                                     (cl-destructuring-bind (from . to) rule
+                                     (cl-destructuring-bind (_from . to) rule
                                        (string-prefix-p to path)))
                                    org-pdftools-path-translations)))
     (if translation-rule
@@ -294,8 +302,8 @@ Returns components of the path"
                    (isearch-yank-string search-string))))))
           ((cl-getf pdf-link :pathlist)
            (pdf-occur-search
-            pathlist
-            occur-search-string))
+            (cl-getf pdf-link :pathlist)
+            (cl-getf pdf-link :occur-search-string)))
           (t (message "Invalid pdf link.")))))
 
 (defun org-pdftools-get-link ()
@@ -391,7 +399,8 @@ Returns components of the path"
 
 ;;;###autoload
 (defun org-pdftools-open (link &optional arg)
-  "Function to open org-pdftools LINK."
+  "Open org-pdftools LINK.
+If prefix argument `ARG' is provided open the link with external application."
   (if (and (not arg)
            (display-graphic-p)
            (featurep 'pdf-tools))
@@ -464,18 +473,18 @@ Returns components of the path"
   "Set up pdf links in `org-mode'.
 Optional argument PREFIX specifies link prefix.
 Default value is variable `org-pdftools-link-prefix' (pdf:)."
-  (setq org-pdftools-prefix (or prefix org-pdftools-link-prefix))
-  (org-link-set-parameters org-pdftools-prefix
-                           :follow #'org-pdftools-open
-                           :complete #'org-pdftools-complete-link
-                           :store #'org-pdftools-store-link
-                           :export #'org-pdftools-export))
+  (let ((org-pdftools-prefix (or prefix org-pdftools-link-prefix)))
+    (org-link-set-parameters org-pdftools-prefix
+                             :follow #'org-pdftools-open
+                             :complete #'org-pdftools-complete-link
+                             :store #'org-pdftools-store-link
+                             :export #'org-pdftools-export)))
 
 ;;;###autoload
 (defun org-pdftools-complete-link (&optional arg)
   "Use the existing file name completion for file.
 Links to get the file name, then ask the user for the page number
-and append it. ARG is passed to `org-link-complete-file'."
+and append it.  ARG is passed to `org-link-complete-file'."
   (let* ((pdf-or-dir-p '(lambda (file-name)
                           (string-match "/$\\|.pdf$" file-name)))
          ;; pdf-or-dir-p, a predicate returns t when file's path
@@ -492,7 +501,7 @@ and append it. ARG is passed to `org-link-complete-file'."
           ;; or directory.
           (lambda
             (prompt &optional dir default-filename mustmatch initial
-                    predicate)
+                    _predicate)
             (funcall current-read-file-name-function
                      prompt dir default-filename mustmatch initial
                      pdf-or-dir-p))))
